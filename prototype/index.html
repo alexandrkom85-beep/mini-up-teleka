@@ -137,7 +137,7 @@ html.in-tg{--page:var(--tg-theme-secondary-bg-color);--cell:var(--tg-theme-secti
 (function(){
 const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();}
-const CONTACT='YOUR_USERNAME'; // ← твой ник в Telegram без @
+const CONTACT='sanchokrsk'; // ← твой ник в Telegram без @
 const KEY='showcase-proto-v2';
 function openChat(){const u='https://t.me/'+CONTACT;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
 const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
