@@ -1,0 +1,351 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Витрина мини-приложений</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: native Telegram Mini App — Telegram header, inset-grouped cells on secondary bg, full-width MainButton at the bottom */
+:root{
+  --page: var(--tg-theme-secondary-bg-color, #EFEFF4);
+  --cell: var(--tg-theme-section-bg-color, #FFFFFF);
+  --head: var(--tg-theme-header-bg-color, #F7F7F7);
+  --text: var(--tg-theme-text-color, #000000);
+  --hint: var(--tg-theme-hint-color, #8E8E93);
+  --link: var(--tg-theme-link-color, #2481CC);
+  --btn: var(--tg-theme-button-color, #2481CC);
+  --btn-text: var(--tg-theme-button-text-color, #FFFFFF);
+  --sep: var(--tg-theme-section-separator-color, #C8C7CC);
+  --soft: #E3EEF8; --price: #1F8A3B; --danger: var(--tg-theme-destructive-text-color, #E53935);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#0F0F0F; --cell:#1C1C1D; --head:#1C1C1D; --text:#FFFFFF; --hint:#8D8E93; --link:#5EB5F7;
+  --btn:#3E88F7; --btn-text:#FFFFFF; --sep:#38383A; --soft:#1E2C3D; --price:#5BD27A; --danger:#FF6B6B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#0F0F0F; --cell:#1C1C1D; --head:#1C1C1D; --text:#FFFFFF; --hint:#8D8E93; --link:#5EB5F7;
+  --btn:#3E88F7; --btn-text:#FFFFFF; --sep:#38383A; --soft:#1E2C3D; --price:#5BD27A; --danger:#FF6B6B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.35;-webkit-font-smoothing:antialiased;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+h1,h2,p{margin:0}
+.app{max-width:480px;margin:0 auto;min-height:100%;background:var(--page);padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+
+/* simulated Telegram header (hidden inside real Telegram) */
+.tgh{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--head);border-bottom:.5px solid var(--sep);
+  display:grid;grid-template-columns:90px 1fr 90px;align-items:center;height:52px;padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-area-inset-right,0px))}
+.tgh .l,.tgh .r{color:var(--link);font-size:16px;display:flex;align-items:center;gap:4px}
+.tgh .r{justify-content:flex-end;font-size:22px;letter-spacing:1px}
+.tgh .c{text-align:center;min-width:0}
+.tgh .c b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tgh .c span{font-size:12px;color:var(--hint)}
+.in-tg .tgh{display:none}
+
+/* sections & cells */
+.sec{margin:20px 16px 0}
+.sec-h{font-size:13px;text-transform:uppercase;letter-spacing:.02em;color:var(--hint);padding:0 16px 7px}
+.sec-f{font-size:13px;color:var(--hint);padding:7px 16px 0;line-height:1.35}
+.grp{background:var(--cell);border-radius:12px;overflow:hidden}
+.cell{display:flex;align-items:center;gap:12px;min-height:46px;padding:8px 16px;width:100%;text-align:left;position:relative}
+.cell + .cell::before{content:"";position:absolute;top:0;right:0;left:16px;border-top:.5px solid var(--sep)}
+.cell.ic + .cell::before,.cell.ic + .cell.ic::before{left:58px}
+.cell .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:17px;flex:none;color:#fff}
+.cell .tx{flex:1;min-width:0}
+.cell .tx b{font-weight:400;display:block}
+.cell .tx span{display:block;font-size:14px;color:var(--hint);margin-top:1px}
+.cell .val{color:var(--hint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell .chev{color:var(--hint);font-size:20px;line-height:1;opacity:.6}
+.cell .ck{color:var(--link);font-size:18px;width:20px;text-align:center;flex:none}
+.cell.link .tx b{color:var(--link)}
+.price{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* profile block */
+.prof{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 16px 4px;text-align:center}
+.ava{width:84px;height:84px;border-radius:50%;background:linear-gradient(145deg,#4FA3F7,#2366C9);display:grid;place-items:center;color:#fff;font-weight:700;font-size:28px;letter-spacing:-.02em}
+.prof h1{font-size:22px;font-weight:600;text-wrap:balance}
+.prof p{color:var(--hint);font-size:14px;max-width:34ch}
+
+/* switch, stepper, segmented */
+.sw{appearance:none;width:51px;height:31px;border-radius:16px;background:var(--sep);position:relative;flex:none;transition:background .2s;cursor:pointer;margin:0}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgb(0 0 0 / .2);transition:transform .2s}
+.sw:checked{background:#34C759}
+.sw:checked::after{transform:translateX(20px)}
+.stp{display:flex;align-items:center;background:var(--page);border-radius:9px;overflow:hidden;flex:none}
+.stp button{width:40px;height:32px;font-size:20px;color:var(--link)}
+.stp span{min-width:26px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.segc{display:flex;background:var(--sep);background:color-mix(in srgb,var(--hint) 22%,transparent);border-radius:9px;padding:2px;margin:16px 16px 0}
+.segc button{flex:1;padding:6px 4px;border-radius:7px;font-size:14px;font-weight:500}
+.segc.cats{overflow-x:auto;scrollbar-width:none}.segc.cats button{flex:none;padding:6px 12px}
+.segc button[aria-pressed="true"]{background:var(--cell);box-shadow:0 1px 3px rgb(0 0 0 / .15);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--btn);margin:0}
+.inp{border:0;background:transparent;width:100%;padding:12px 16px;outline:none;font-size:16px}
+.inp::placeholder{color:var(--hint)}
+select.inp{appearance:none}
+.inpcell{position:relative}
+.inpcell + .inpcell::before{content:"";position:absolute;top:0;right:0;left:16px;border-top:.5px solid var(--sep)}
+
+/* food grid (DurgerKing-style) */
+.food{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 8px;padding:20px 12px 0}
+.fi{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;position:relative}
+.fi .em{width:84px;height:84px;display:grid;place-items:center;font-size:56px;line-height:1}
+.fi .nm{font-size:13px;line-height:1.2;min-height:2.4em}
+.fi .pr{font-size:13px;color:var(--hint);font-variant-numeric:tabular-nums}
+.fi .add{background:#F8A917;color:#fff;font-weight:700;font-size:13px;text-transform:uppercase;border-radius:8px;padding:6px 0;width:84px}
+.fi .pm{display:flex;gap:4px;width:84px}
+.fi .pm button{flex:1;border-radius:8px;padding:6px 0;font-weight:800;color:#fff}
+.fi .pm .mi{background:#E64D44}.fi .pm .pl{background:#F8A917}
+.fi .badge{position:absolute;top:-4px;right:12px;background:#F8A917;color:#fff;font-size:13px;font-weight:700;min-width:24px;height:24px;border-radius:12px;display:grid;place-items:center;padding:0 6px;font-variant-numeric:tabular-nums}
+.fi.off{opacity:.4}
+
+/* rent */
+.ph{height:170px;border-radius:12px 12px 0 0;position:relative;display:flex;align-items:flex-end;padding:12px}
+.ph .tag{background:rgb(0 0 0 / .5);color:#fff;font-size:13px;font-weight:600;border-radius:8px;padding:4px 9px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:10px 12px 12px;text-align:center}
+.cal .dw{font-size:12px;color:var(--hint);padding-block:4px}
+.cal button{height:40px;border-radius:20px;font-size:16px;font-variant-numeric:tabular-nums}
+.cal button.in{background:var(--soft);border-radius:0}
+.cal button.edge{background:var(--btn);color:var(--btn-text)}
+
+/* MainButton (simulated) */
+.mb{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--page);padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.mb button{display:block;max-width:448px;margin:0 auto;width:100%;height:50px;border-radius:12px;background:var(--btn);color:var(--btn-text);font-size:16px;font-weight:600}
+.mb button:disabled{opacity:.5;cursor:not-allowed}
+.in-tg .mb{display:none}
+
+.done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:70px 24px 0}
+.done .ok{width:96px;height:96px;border-radius:50%;background:#34C759;color:#fff;display:grid;place-items:center;font-size:48px}
+.done h2{font-size:22px;font-weight:600}
+.done p{color:var(--hint);max-width:32ch}
+.err{color:var(--danger);font-size:14px;padding:8px 16px 0}
+.pill{font-size:12px;font-weight:600;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.pill.new{background:#FFF1D6;color:#9A5B00}.pill.work{background:var(--soft);color:var(--link)}.pill.closed{background:var(--page);color:var(--hint)}
+.ed{width:84px;text-align:right;border:0;background:var(--page);border-radius:8px;padding:6px 8px;font-variant-numeric:tabular-nums}
+.edn{flex:1;min-width:0;border:0;background:transparent;padding:0;font-size:16px}
+.note{margin:18px 16px 0;font-size:13px;color:var(--hint);text-align:center}
+html.in-tg{--page:var(--tg-theme-secondary-bg-color);--cell:var(--tg-theme-section-bg-color,var(--tg-theme-bg-color));--head:var(--tg-theme-header-bg-color);--text:var(--tg-theme-text-color);--hint:var(--tg-theme-hint-color);--link:var(--tg-theme-link-color);--btn:var(--tg-theme-button-color);--btn-text:var(--tg-theme-button-text-color)}
+@media (prefers-reduced-motion:no-preference){.scr{animation:sl .2s ease-out}@keyframes sl{from{transform:translateX(12px)}to{transform:none}}}
+</style></head><body>
+
+<div class="app">
+  <header class="tgh" id="tgh"></header>
+  <main id="app"></main>
+</div>
+<div class="mb" id="mb"><button id="mbb" type="button">Продолжить</button></div>
+
+<script>
+(function(){
+const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();}
+const CONTACT='YOUR_USERNAME'; // ← твой ник в Telegram без @
+const KEY='showcase-proto-v2';
+function openChat(){const u='https://t.me/'+CONTACT;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
+const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const DEF={
+  hero:'Мини-приложения для бизнеса',
+  repair:{works:[{id:'ceil',name:'Натяжной потолок',price:650},{id:'paint',name:'Покраска стен',price:380},{id:'lam',name:'Укладка ламината',price:450},{id:'tile',name:'Укладка плитки',price:1400}],lamp:450,demont:150,rough:200},
+  menu:[
+    {id:'m1',cat:'Комплексы',em:'🍱',name:'Комплекс «Рабочий»',price:390,on:true},
+    {id:'m2',cat:'Комплексы',em:'🥗',name:'Комплекс «Лёгкий»',price:320,on:true},
+    {id:'m3',cat:'Супы',em:'🍲',name:'Борщ',price:160,on:true},
+    {id:'m4',cat:'Супы',em:'🥣',name:'Солянка',price:190,on:true},
+    {id:'m5',cat:'Горячее',em:'🍖',name:'Котлета с пюре',price:230,on:true},
+    {id:'m6',cat:'Горячее',em:'🍛',name:'Плов',price:260,on:false},
+    {id:'m7',cat:'Горячее',em:'🍝',name:'Паста с курицей',price:250,on:true},
+    {id:'m8',cat:'Салаты',em:'🥗',name:'Цезарь',price:240,on:true},
+    {id:'m9',cat:'Напитки',em:'🧃',name:'Морс',price:70,on:true}
+  ],
+  flats:[
+    {id:'f1',name:'Студия у набережной',addr:'Центр · 7 мин до метро',guests:2,price:3200,on:true,c1:'#2F7F6F',c2:'#A9D8C8'},
+    {id:'f2',name:'Двушка для семьи',addr:'Спальный район · парковка',guests:4,price:4600,on:true,c1:'#8A5A2B',c2:'#E9C99B'},
+    {id:'f3',name:'Лофт с видом',addr:'Деловой квартал · 18 этаж',guests:3,price:5900,on:true,c1:'#3C4C7A',c2:'#B8C3E6'}
+  ],
+  leads:[
+    {id:'ex1',src:'Ремонт',title:'Натяжной потолок, 18 м²',who:'Ирина · +7 900 000-00-01',sum:15300,status:'work',ts:Date.now()-86400000,example:true},
+    {id:'ex2',src:'Обеды',title:'2 × Комплекс «Рабочий», 12:30',who:'ООО «Пример» · +7 900 000-00-02',sum:780,status:'new',ts:Date.now()-3600000,example:true}
+  ]
+};
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(!S)S=JSON.parse(JSON.stringify(DEF));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const U={scr:'home',stack:[],rep:{work:'ceil',area:18,lamps:6,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:'12:30',
+  flat:null,start:null,end:null,guests:2,admin:false,atab:'leads',done:null,err:''};
+
+const $=id=>document.getElementById(id);
+function go(s){if(U.scr!==s)U.stack.push(U.scr);U.scr=s;U.err='';render();window.scrollTo(0,0)}
+function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,0)}
+function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
+function addLead(src,title,who,sum){S.leads.unshift({id:uid(),src,title,who,sum,status:'new',ts:Date.now()});save()}
+function finish(h,p){U.done={h,p};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
+
+const sec=(h,inner,f)=>`<div class="sec">${h?`<div class="sec-h">${h}</div>`:''}<div class="grp">${inner}</div>${f?`<div class="sec-f">${f}</div>`:''}</div>`;
+const cell=({ico,col,t,s,val,chev,go:g,act,cls=''})=>`<${g||act?'button':'div'} class="cell ${ico?'ic':''} ${cls}" ${g?`data-go="${g}"`:''} ${act||''}>
+  ${ico?`<span class="ico" style="background:${col}">${ico}</span>`:''}<span class="tx"><b>${t}</b>${s?`<span>${s}</span>`:''}</span>${val!=null?`<span class="val">${val}</span>`:''}${chev?'<span class="chev">›</span>':''}</${g||act?'button':'div'}>`;
+
+/* ---------- screens: each returns {title, sub, html, main:{text,fn,disabled}} ---------- */
+const scr={};
+scr.home=()=>({title:'Витрина решений',sub:'мини-приложение',html:`
+ <div class="prof"><div class="ava">МП</div><h1>${esc(S.hero)}</h1><p>Попробуйте демо: так ваши клиенты будут считать, заказывать и бронировать прямо в Telegram</p></div>
+ ${sec('Демо для вашего бизнеса',
+   cell({ico:'📐',col:'#34A853',t:'Ремонт и отделка',s:'Калькулятор цены и заявка на замер',chev:1,go:'repair'})+
+   cell({ico:'🍱',col:'#F8A917',t:'Доставка обедов',s:'Меню дня, корзина, время доставки',chev:1,go:'lunch'})+
+   cell({ico:'🔑',col:'#5E5CE6',t:'Посуточная аренда',s:'Квартиры, календарь, бронь',chev:1,go:'rent'}))}
+ ${sec('Что получает бизнес',
+   cell({ico:'⏱',col:'#FF9500',t:'Заявки без звонков',s:'Клиент сам выбирает и считает'})+
+   cell({ico:'✏️',col:'#2481CC',t:'Своя админка',s:'Цены, меню и фото меняете сами'})+
+   cell({ico:'📱',col:'#8E8E93',t:'Telegram, MAX и браузер',s:'Одно приложение на всех площадках'}))}
+ ${sec('Под ваш бизнес',
+   cell({ico:'🧩',col:'#AF52DE',t:'Индивидуально под задачу',s:'Запись, расчёты, заказы, бронь, каталог'})+
+   cell({ico:'🔗',col:'#0A84FF',t:'Связка с вашими системами',s:'CRM, учёт, корпоративные сервисы — по проекту'})+
+   cell({ico:'💬',col:'#34C759',t:'Обсудить проект',s:'Напишите, расскажите о бизнесе',chev:1,act:'data-act="chat"'}))}
+ ${sec('Попробуйте сами',cell({ico:'⚙️',col:'#636366',t:'Админка владельца',s:'Меняйте цены и меню, смотрите заявки',chev:1,go:'admin'}),'Это демо. Всё, что вы вводите, видно только на вашем устройстве и никуда не отправляется.')}`,
+ main:{text:'Обсудить проект',fn:openChat}});
+
+function repTotal(){const r=S.repair,u=U.rep,w=r.works.find(x=>x.id===u.work)||r.works[0];let t=w.price*u.area;if(u.work==='ceil')t+=u.lamps*r.lamp;if(u.demont)t+=r.demont*u.area;if(u.rough)t+=r.rough*u.area;return{t,w}}
+scr.repair=()=>{const r=S.repair,u=U.rep,{t}=repTotal();return{title:'Мастер ремонта',sub:'демо · калькулятор',html:`
+ ${sec('Вид работ',r.works.map(w=>`<button class="cell" data-rw="${w.id}"><span class="tx"><b>${esc(w.name)}</b></span><span class="val">${rub(w.price)}/м²</span><span class="ck">${u.work===w.id?'✓':''}</span></button>`).join(''))}
+ ${sec('Площадь',`<div class="cell"><span class="tx"><b>Площадь помещения</b></span><span class="val" id="areaV" style="color:var(--text);font-weight:600">${u.area} м²</span></div>
+   <div class="cell" style="padding-top:0"><input id="area" type="range" min="5" max="120" value="${u.area}" aria-label="Площадь"></div>`)}
+ ${sec('Дополнительно',
+   (u.work==='ceil'?`<div class="cell"><span class="tx"><b>Точечные светильники</b><span>${rub(r.lamp)} за шт.</span></span><span class="stp"><button data-lamp="-1" aria-label="Меньше">−</button><span>${u.lamps}</span><button data-lamp="1" aria-label="Больше">+</button></span></div>`:'')+
+   `<label class="cell"><span class="tx"><b>Демонтаж старого</b><span>${rub(r.demont)} за м²</span></span><input class="sw" type="checkbox" id="demont" ${u.demont?'checked':''}></label>
+    <label class="cell"><span class="tx"><b>Материалы от нас</b><span>${rub(r.rough)} за м²</span></span><input class="sw" type="checkbox" id="rough" ${u.rough?'checked':''}></label>`,
+   'Точную цену мастер назовёт после бесплатного замера. Цены в демо примерные.')}`,
+ main:{text:'Вызвать замерщика · от '+rub(t),fn:()=>go('repairForm')}}};
+scr.repairForm=()=>{const{t,w}=repTotal();return{title:'Заявка на замер',sub:'Мастер ремонта',html:`
+ ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+U.rep.area+' м²',val:'от '+rub(t)}))}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="name"></div>
+   <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон" autocomplete="tel"></div>
+   <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район"></div>`)}
+ ${sec('Удобный день',`<div class="inpcell"><select class="inp" id="rd">${nextDays(6).map(d=>`<option>${d}</option>`).join('')}</select></div>`)}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Отправить заявку',fn:()=>{if(!val('rn').trim())return fail('Укажите имя');if(!phoneOk(val('rp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+   addLead('Ремонт',`${w.name}, ${U.rep.area} м² · ${val('rd')}`,`${val('rn')} · ${val('rp')}`,t);finish('Заявка у мастера','Мастер позвонит и договорится о замере. После замера цена может уточниться.')}}}};
+
+function cartSum(){let n=0,s=0;for(const id in U.cart){const m=S.menu.find(x=>x.id===id);if(m&&m.on){n+=U.cart[id];s+=m.price*U.cart[id]}}return{n,s}}
+scr.lunch=()=>{const cats=['Все',...new Set(S.menu.map(m=>m.cat))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum();return{title:'Обед рядом',sub:'демо · доставка 11:30–15:00',html:`
+ <div class="segc">${['Сегодня','Завтра'].map((d,i)=>`<button data-day="${i}" aria-pressed="${U.day===i}">${d}, ${dayL(i)}</button>`).join('')}</div>
+ <div class="segc cats">${cats.map(c=>`<button data-cat="${esc(c)}" aria-pressed="${U.cat===c}">${esc(c)}</button>`).join('')}</div>
+ <div class="food">${S.menu.filter(m=>U.cat==='Все'||m.cat===U.cat).map(m=>{const q=U.cart[m.id]||0;return`<div class="fi ${m.on?'':'off'}">
+   ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${m.em||'🍽'}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
+   ${!m.on?'<div class="pr">Закончилось</div>':q?`<div class="pm"><button class="mi" data-add="${m.id}" data-d="-1" aria-label="Убрать">−</button><button class="pl" data-add="${m.id}" data-d="1" aria-label="Добавить">+</button></div>`:`<button class="add" data-add="${m.id}" data-d="1">Добавить</button>`}</div>`}).join('')}</div>
+ <div class="note">Бесплатная доставка от 600 ₽. Условия в демо примерные.</div>`,
+ main:n?{text:`Посмотреть заказ · ${rub(s)}`,fn:()=>go('lunchForm')}:{text:'Выберите блюда',disabled:true}}};
+scr.lunchForm=()=>{const{n,s}=cartSum();const slots=['12:00','12:30','13:00','13:30'];return{title:'Ваш заказ',sub:'Обед рядом',html:`
+ ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=S.menu.find(x=>x.id===id);return m&&m.on?`<div class="cell"><span style="font-size:26px">${m.em}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
+   `<div class="cell"><span class="tx"><b><strong>Итого</strong></b></span><span class="price">${rub(s)}</span></div>`)}
+ <div class="sec-h" style="margin:20px 16px 0">Время доставки</div>
+ <div class="segc" style="margin-top:0">${slots.map(t=>`<button data-slot="${t}" aria-pressed="${U.slot===t}">${t}</button>`).join('')}</div>
+ ${sec('Доставка',`<div class="inpcell"><input class="inp" id="la" placeholder="Адрес офиса, этаж"></div><div class="inpcell"><input class="inp" id="lp" inputmode="tel" placeholder="Телефон"></div>`,'Оплата курьеру картой или наличными.')}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Заказать · '+rub(s),fn:()=>{if(!val('la').trim())return fail('Укажите адрес');if(!phoneOk(val('lp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+   const items=Object.keys(U.cart).map(id=>{const m=S.menu.find(x=>x.id===id);return m?`${m.name} × ${U.cart[id]}`:''}).filter(Boolean).join(', ');
+   addLead('Обеды',`${items} · ${['сегодня','завтра'][U.day]} ${U.slot}`,`${val('la')} · ${val('lp')}`,s);finish('Заказ принят',`Привезём ${['сегодня','завтра'][U.day]} к ${U.slot}. Столовая уже видит заказ.`)}}}};
+
+scr.rent=()=>({title:'Квартиры посуточно',sub:'демо',html:S.flats.filter(f=>f.on).map(f=>`<div class="sec"><button class="grp" data-flat="${f.id}" style="display:block;width:100%;text-align:left">
+   <div class="ph" style="background:linear-gradient(160deg,${f.c1},${f.c2})"><span class="tag">до ${f.guests} гостей</span></div>
+   <div class="cell"><span class="tx"><b style="font-weight:600">${esc(f.name)}</b><span>${esc(f.addr)}</span></span><span class="price">${rub(f.price)}<span style="color:var(--hint);font-weight:400"> /ночь</span></span></div></button></div>`).join('')+
+   '<div class="note">В рабочей версии здесь будут настоящие фото.</div>',main:{text:'Выберите квартиру',disabled:true}});
+const nights=()=>U.start!=null&&U.end!=null?U.end-U.start:0;
+scr.flat=()=>{const f=S.flats.find(x=>x.id===U.flat);const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
+ for(let i=0;i<off;i++)c+='<span></span>';
+ for(let i=0;i<28;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const k=(U.start===i||U.end===i)?'edge':(U.start!=null&&U.end!=null&&i>U.start&&i<U.end)?'in':'';
+  c+=`<button class="${k}" data-di="${i}" aria-label="${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}">${d.getDate()}</button>`}
+ const n=nights();return{title:f.name,sub:f.addr,html:`
+ <div class="sec"><div class="grp"><div class="ph" style="background:linear-gradient(160deg,${f.c1},${f.c2});border-radius:0"><span class="tag">${rub(f.price)} за ночь</span></div></div></div>
+ ${sec(U.start==null?'Выберите дату заезда':U.end==null?'Выберите дату выезда':fmtD(U.start)+' — '+fmtD(U.end),`<div class="cal">${['пн','вт','ср','чт','пт','сб','вс'].map(d=>`<span class="dw">${d}</span>`).join('')}${c}</div>`)}
+ ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>максимум ${f.guests}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`)}`,
+ main:n?{text:`Забронировать · ${n} ${pl(n,'ночь','ночи','ночей')} · ${rub(n*f.price)}`,fn:()=>go('flatForm')}:{text:'Выберите даты',disabled:true}}};
+scr.flatForm=()=>{const f=S.flats.find(x=>x.id===U.flat),n=nights();return{title:'Бронирование',sub:f.name,html:`
+ ${sec('Бронь',cell({t:`${fmtD(U.start)} — ${fmtD(U.end)}`,s:`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,val:rub(n*f.price)}))}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон"></div>`,'Хозяин подтвердит даты и пришлёт реквизиты для предоплаты.')}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+   addLead('Аренда',`${f.name}, ${fmtD(U.start)} — ${fmtD(U.end)}, ${U.guests} гост.`,`${val('fn')} · ${val('fp')}`,n*f.price);finish('Заявка отправлена','Хозяин подтвердит бронь и пришлёт реквизиты для предоплаты.')}}}};
+
+scr.lead=()=>({title:'Заявка',sub:'на разработку',html:`
+ <div class="prof"><h1>Расскажите о бизнесе</h1><p>Ответим в течение дня и предложим решение с ценой</p></div>
+ ${sec('Сфера',`<div class="inpcell"><select class="inp" id="ln"><option>Ремонт и строительство</option><option>Общепит и доставка</option><option>Аренда жилья</option><option>Салон, мастер красоты</option><option>Другое</option></select></div>`)}
+ ${sec('Что нужно',['Расчёт стоимости','Онлайн-запись','Заказы и оплата','Бронирование'].map(x=>`<label class="cell"><span class="tx"><b>${x}</b></span><input class="sw" type="checkbox" name="need" value="${x}"></label>`).join(''))}
+ ${sec('Контакт',`<div class="inpcell"><input class="inp" id="lc" placeholder="Имя и телефон или @ник"></div>`,'Демо: заявка появится в «Админке» на вашем устройстве.')}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Отправить',fn:()=>{const c=val('lc').trim();if(c.length<3)return fail('Оставьте имя и телефон или ник');
+   const needs=[...document.querySelectorAll('input[name=need]:checked')].map(x=>x.value).join(', ')||'не указано';addLead('Разработка',`${val('ln')}: ${needs}`,c,0);finish('Заявка отправлена','Свяжемся в течение дня и предложим решение для вашего бизнеса.')}}});
+
+scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
+ ${sec('Так это видит владелец',cell({t:'Открыть админку',cls:'link',go:'admin'}))}
+ ${sec('',cell({t:'Хочу такое для своего бизнеса',cls:'link',act:'data-act="chat"'}))}`,main:{text:'На витрину',fn:home}});
+
+scr.admin=()=>{
+ if(!U.admin)return{title:'Админка',sub:'вход',html:`<div class="prof"><div class="ava" style="background:linear-gradient(145deg,#8E8E93,#48484A)">⚙</div><h1>Вход для владельца</h1><p>Здесь меняются цены, меню и квартиры, и видны все заявки</p></div>
+  ${sec('',`<div class="inpcell"><input class="inp" id="pw" type="password" placeholder="Пароль (в демо: demo)"></div>`,'Демо-режим: изменения видны только на вашем устройстве.')}
+  ${U.err?`<div class="err">${U.err}</div>`:''}`,main:{text:'Войти',fn:()=>{if(val('pw')==='demo'){U.admin=true;U.err='';render()}else fail('Неверный пароль. В демо: demo')}}};
+ const st={new:'Новая',work:'В работе',closed:'Закрыта'},t=U.atab;let h='';
+ if(t==='leads')h=sec('Заявки',S.leads.length?S.leads.map(l=>`<div class="cell" style="align-items:flex-start"><span class="tx"><b><strong>${esc(l.src)}</strong>${l.example?' · пример':''}</b><span style="color:var(--text)">${esc(l.title)}</span><span>${esc(l.who)}</span><span>${new Date(l.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${l.sum?' · '+rub(l.sum):''}</span></span>
+   <span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="pill ${l.status}">${st[l.status]}</span><select class="ed" style="width:auto" data-lst="${l.id}" aria-label="Статус">${Object.entries(st).map(([k,v])=>`<option value="${k}" ${l.status===k?'selected':''}>${v}</option>`).join('')}</select></span></div>`).join(''):cell({t:'Заявок пока нет',s:'Пройдите любое демо до конца'}));
+ if(t==='repair')h=sec('Цена за м²',S.repair.works.map((w,i)=>`<div class="cell"><span class="tx"><b>${esc(w.name)}</b></span><input class="ed" type="number" min="0" data-rp="${i}" value="${w.price}" aria-label="Цена ${esc(w.name)}"></div>`).join(''))+
+   sec('Дополнительно',[['lamp','Светильник, шт'],['demont','Демонтаж, м²'],['rough','Материалы, м²']].map(([k,n])=>`<div class="cell"><span class="tx"><b>${n}</b></span><input class="ed" type="number" min="0" data-rx="${k}" value="${S.repair[k]}" aria-label="${n}"></div>`).join(''),'Новые цены сразу применяются в калькуляторе.');
+ if(t==='menu')h=sec('Меню дня',S.menu.map((m,i)=>`<div class="cell"><span style="font-size:24px">${m.em}</span><input class="edn" data-mn="${i}" value="${esc(m.name)}" aria-label="Название"><input class="ed" type="number" min="0" data-mp="${i}" value="${m.price}" aria-label="Цена"><input class="sw" type="checkbox" data-mo="${i}" ${m.on?'checked':''} aria-label="Есть сегодня"></div>`).join('')+
+   cell({t:'Добавить блюдо',cls:'link',act:'data-act="addDish"'}),'Выключите блюдо, и в меню появится «Закончилось».');
+ if(t==='flats')h=sec('Квартиры',S.flats.map((f,i)=>`<div class="cell"><span class="tx"><b>${esc(f.name)}</b><span>цена за ночь</span></span><input class="ed" type="number" min="0" data-fp="${i}" value="${f.price}" aria-label="Цена за ночь"><input class="sw" type="checkbox" data-fo="${i}" ${f.on?'checked':''} aria-label="Показывать"></div>`).join(''),'Выключенная квартира пропадает из списка.');
+ if(t==='texts')h=sec('Заголовок витрины',`<div class="inpcell"><input class="inp" id="hero" value="${esc(S.hero)}"></div>`)+sec('',cell({t:'Сбросить данные прототипа',cls:'link',act:'data-act="reset"'}));
+ return{title:'Админка',sub:'правки сразу видны в демо',html:`<div class="segc">${[['leads','Заявки'],['repair','Ремонт'],['menu','Меню'],['flats','Квартиры'],['texts','Ещё']].map(([k,v])=>`<button data-at="${k}" aria-pressed="${t===k}">${v}</button>`).join('')}</div>${h}`,
+  main:{text:'Выйти из админки',fn:()=>{U.admin=false;home()}}}};
+
+/* ---------- helpers ---------- */
+const val=id=>($(id)||{}).value||'';
+const phoneOk=v=>v.replace(/\D/g,'').length>=10;
+function fail(m){U.err=m;const keep={};document.querySelectorAll('input[id],select[id]').forEach(e=>keep[e.id]=e.type==='checkbox'?e.checked:e.value);render();for(const k in keep){const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k]}}if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')}
+function dayL(i){const d=new Date();d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
+function nextDays(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i+1);return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'})})}
+function fmtD(i){const d=new Date();d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
+function pl(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<10||h>=20)?b:c}
+
+let curMain=null;
+function render(){const v=scr[U.scr]();const isHome=U.scr==='home';
+ $('tgh').innerHTML=`<button class="l" data-act="${isHome?'':'back'}" aria-label="${isHome?'Закрыть':'Назад'}">${isHome?'Закрыть':'‹ Назад'}</button><div class="c"><b>${esc(v.title)}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div><span class="r" aria-hidden="true">⋯</span>`;
+ $('app').innerHTML=`<div class="scr">${v.html}</div>`;
+ curMain=v.main;const b=$('mbb');b.textContent=v.main.text;b.disabled=!!v.main.disabled;
+ if(TG){const M=TG.MainButton;M.setText(v.main.text);v.main.disabled?M.disable():M.enable();M.show();isHome?TG.BackButton.hide():TG.BackButton.show()}
+}
+function liveMain(text){$('mbb').textContent=text;if(TG)TG.MainButton.setText(text)}
+$('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
+if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
+
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-at]');if(!b)return;const d=b.dataset;
+ if(d.go)return go(d.go);
+ if(d.act==='back')return back();
+ if(d.act==='chat')return openChat();
+ if(d.act==='addDish'){S.menu.push({id:uid(),cat:'Горячее',em:'🍽',name:'Новое блюдо',price:200,on:true});save();return render()}
+ if(d.act==='reset'){S=JSON.parse(JSON.stringify(DEF));save();U.cart={};return render()}
+ if(d.rw){U.rep.work=d.rw;return render()}
+ if(d.lamp){U.rep.lamps=Math.max(0,Math.min(40,U.rep.lamps+ +d.lamp));return render()}
+ if(d.day){U.day=+d.day;return render()}
+ if(d.cat){U.cat=d.cat;return render()}
+ if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
+ if(d.slot){U.slot=d.slot;const keep={la:val('la'),lp:val('lp')};render();for(const k in keep)if($(k))$(k).value=keep[k];return}
+ if(d.flat){U.flat=d.flat;U.start=U.end=null;U.guests=2;return go('flat')}
+ if(d.di){const i=+d.di;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else U.end=i;return render()}
+ if(d.g){const f=S.flats.find(x=>x.id===U.flat);U.guests=Math.max(1,Math.min(f.guests,U.guests+ +d.g));return render()}
+ if(d.at){U.atab=d.at;return render()}
+});
+document.addEventListener('input',e=>{const t=e.target,d=t.dataset,num=Math.max(0,+t.value||0);
+ if(t.id==='area'){U.rep.area=+t.value;$('areaV').textContent=t.value+' м²';liveMain('Вызвать замерщика · от '+rub(repTotal().t));curMain=scr.repair().main;return}
+ if(t.id==='hero'){S.hero=t.value;save();return}
+ if(d.rp!=null){S.repair.works[+d.rp].price=num;save()}
+ if(d.rx){S.repair[d.rx]=num;save()}
+ if(d.mp!=null){S.menu[+d.mp].price=num;save()}
+ if(d.mn!=null){S.menu[+d.mn].name=t.value;save()}
+ if(d.fp!=null){S.flats[+d.fp].price=num;save()}
+});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
+ if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;liveMain('Вызвать замерщика · от '+rub(repTotal().t));return}
+ if(d.mo!=null){S.menu[+d.mo].on=t.checked;save()}
+ if(d.fo!=null){S.flats[+d.fo].on=t.checked;save()}
+ if(d.lst){const l=S.leads.find(x=>x.id===d.lst);if(l){l.status=t.value;save();render()}}
+});
+render();
+})();
+</script>
+</body></html>
