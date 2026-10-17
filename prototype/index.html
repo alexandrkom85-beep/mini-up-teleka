@@ -169,12 +169,16 @@ select.inp{appearance:none;-webkit-appearance:none}
 </div>
 <div class="mb" id="mb"><button id="mbb" type="button">Продолжить</button></div>
 
-<script src="data.js"></script>
 <script>
 /* Логика витрины. Тексты и цены — в data.js, здесь их не меняйте. */
-(function(){
+function showMsg(t){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">'+t+'</div>';document.getElementById('mb').style.display='none'}
+// data.js грузится всегда свежим (?v=время), чтобы телефон не взял старую копию из кэша
+(function(){const s=document.createElement('script');s.src='data.js?v='+Date.now();
+ s.onload=start;s.onerror=()=>showMsg('Не удалось загрузить данные витрины. Проверьте интернет и откройте ещё раз.');
+ document.head.appendChild(s)})();
+function start(){
 const D=window.SHOWCASE;
-if(!D||!D.home||!D.repair||!D.lunch||!D.rent||!D.build){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.</div>';document.getElementById('mb').style.display='none';return}
+if(!D||!D.home||!D.repair||!D.lunch||!D.rent||!D.build)return showMsg('Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.');
 const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
   try{TG.setHeaderColor('#0B0D12');TG.setBackgroundColor('#0B0D12');if(TG.setBottomBarColor)TG.setBottomBarColor('#0B0D12')}catch(e){}}
@@ -348,6 +352,6 @@ document.addEventListener('change',e=>{const t=e.target;
  if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
 render();
-})();
+}
 </script>
 </body></html>
