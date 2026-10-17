@@ -101,6 +101,9 @@ h1,h2,p{margin:0}
 .opt[aria-pressed="true"]{border-color:var(--btn);background:linear-gradient(160deg,#1B2D5C,#171A21)}
 .opt[aria-pressed="true"] .ck{background:var(--btn);border-color:var(--btn)}
 .opt[aria-pressed="true"] .ck::after{content:"✓"}
+.opts.three{grid-template-columns:repeat(3,1fr);gap:8px}
+.opts.three .opt{padding:12px 10px}.opts.three .opt b{font-size:14px}.opts.three .opt .ck{top:10px;right:10px;width:20px;height:20px}
+.sum span + b + span{display:block;margin-top:4px}
 
 /* switch, stepper, chip-tabs */
 .sw{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:#3A3F4B;position:relative;flex:none;transition:background .2s;cursor:pointer;margin:0}
@@ -171,15 +174,15 @@ select.inp{appearance:none;-webkit-appearance:none}
 /* Логика витрины. Тексты и цены — в data.js, здесь их не меняйте. */
 (function(){
 const D=window.SHOWCASE;
-if(!D||!D.home||!D.repair||!D.lunch||!D.rent){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.</div>';document.getElementById('mb').style.display='none';return}
+if(!D||!D.home||!D.repair||!D.lunch||!D.rent||!D.build){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.</div>';document.getElementById('mb').style.display='none';return}
 const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
   try{TG.setHeaderColor('#0B0D12');TG.setBackgroundColor('#0B0D12');if(TG.setBottomBarColor)TG.setBottomBarColor('#0B0D12')}catch(e){}}
 function openChat(){const u='https://t.me/'+D.contact;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
 const rub=n=>Math.round(+n||0).toLocaleString('ru-RU')+' ₽';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const R=D.repair,L=D.lunch,A=D.rent;
-const U={scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
+const R=D.repair,L=D.lunch,A=D.rent,B=D.build;
+const U={bld:{house:null,pack:B.packageStart||B.packages[0].id,ex:{}},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
   flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
@@ -195,7 +198,7 @@ const cell=({ico,col,t,s,val,chev,go:g,act,cls=''})=>`<${g||act?'button':'div'} 
 
 /* ---------- screens: each returns {title, sub, html, main:{text,fn,disabled}} ---------- */
 const scr={};
-const tile=x=>`<button class="tile ${x.wide?'w':''}" style="--g:${esc(x.color)}66" ${target(x.open)}>
+const tile=x=>`<button class="tile ${x.full?'full':x.wide?'w':''}" style="--g:${esc(x.color)}66" ${target(x.open)}>
   <span class="k">${esc(x.label)}</span><b>${esc(x.title)}</b>${x.text?`<span class="d">${esc(x.text)}</span>`:''}<span class="em" aria-hidden="true">${esc(x.emoji)}</span></button>`;
 scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
  <div class="top"><div class="logo" aria-hidden="true">🧩</div><div class="top-t"><b>${esc(H.heading)}</b><span>${esc(H.tagline)}</span></div></div>
@@ -275,6 +278,28 @@ scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирова�
  main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: нужно 10–11 цифр');
    finish(A.doneTitle,A.doneText)}}}};
 
+const house=()=>B.houses.find(x=>x.id===U.bld.house);
+const pack=()=>B.packages.find(x=>x.id===U.bld.pack)||B.packages[0];
+function bldTotal(){const h=house(),p=pack();let t=h.area*p.pricePerM2;B.extras.forEach(x=>{if(U.bld.ex[x.id])t+=x.price});return{t,h,p}}
+scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map(h=>`<div class="sec"><button class="grp" data-house="${esc(h.id)}" style="display:block;width:100%;text-align:left">
+   ${flatPh(h,h.area+' м²')}
+   <div class="cell"><span class="tx"><b style="font-weight:600">${esc(h.name)}</b><span>${esc(h.info)}</span></span><span class="price">от ${rub(h.area*Math.min(...B.packages.map(p=>p.pricePerM2)))}</span></div></button></div>`).join('')+
+   `<div class="note">${esc(B.note)}</div>`,main:{text:'Выберите проект',disabled:true}});
+scr.house=()=>{const{t,h,p}=bldTotal();return{title:h.name,sub:h.info,html:`
+ <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span>Срок строительства — около ${p.months} ${pl(p.months,'месяца','месяцев','месяцев')}</span><span class="em" aria-hidden="true">${esc(h.emoji||'🏠')}</span></div>
+ <div class="sec"><div class="sec-h">Комплектация</div><div class="opts three">${B.packages.map(x=>`<button class="opt" data-pack="${esc(x.id)}" aria-pressed="${p.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${esc(x.emoji||'🏠')}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.pricePerM2)}/м²</span></button>`).join('')}</div></div>
+ ${sec('Дополнительно',B.extras.map(x=>`<label class="cell"><span class="tx"><b>${esc(x.name)}</b><span>${esc(x.text)} · ${rub(x.price)}</span></span><input class="sw" type="checkbox" data-ex="${esc(x.id)}" ${U.bld.ex[x.id]?'checked':''}></label>`).join(''),esc(B.priceNote))}`,
+ main:{text:B.button+' · от '+rub(t),fn:()=>go('buildForm')}}};
+scr.buildForm=()=>{const{t,h,p}=bldTotal();return{title:B.formTitle,sub:B.title,html:`
+ ${sec('Ваш расчёт',cell({t:esc(h.name),s:esc(p.name)+' · '+h.area+' м²',val:'от '+rub(t)}))}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="bn" placeholder="Имя" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="bp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="ba" placeholder="Где участок: район или посёлок" autocomplete="off"></div>`,esc(D.formNote))}
+ ${sec('Когда планируете начать',`<div class="inpcell"><select class="inp" id="bs">${B.startOptions.map(o=>`<option>${esc(o)}</option>`).join('')}</select></div>`)}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Отправить заявку',fn:()=>{if(!val('bn').trim())return fail('Укажите имя');if(!phoneOk(val('bp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+   finish(B.doneTitle,B.doneText)}}}};
+
 scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
  ${sec('',cell({t:esc(D.done.chatLink),cls:'link',act:'data-act="chat"'}))}`,main:{text:D.done.button,fn:home}});
 
@@ -299,7 +324,9 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-house],[data-pack]');if(!b)return;const d=b.dataset;
+ if(d.house){U.bld.house=d.house;U.bld.ex={};return go('house')}
+ if(d.pack){U.bld.pack=d.pack;return render()}
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
@@ -318,6 +345,7 @@ document.addEventListener('input',e=>{const t=e.target;
 });
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
+ if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
 render();
 })();
