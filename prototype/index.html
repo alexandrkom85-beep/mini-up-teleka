@@ -83,11 +83,6 @@ h1,h2,p{margin:0}
 .cell.link .tx b{color:var(--link)}
 .price{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
 
-/* profile block */
-.prof{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 16px 4px;text-align:center}
-.ava{width:84px;height:84px;border-radius:26px;background:linear-gradient(145deg,#5B9BFF,#2F4FD8);display:grid;place-items:center;color:#fff;font-weight:700;font-size:34px;box-shadow:0 12px 28px -10px #2F6BFFAA}
-.prof h1{font-size:22px;font-weight:600;text-wrap:balance}
-.prof p{color:var(--hint);font-size:14px;max-width:34ch}
 
 /* price summary card (repair) */
 .sum{position:relative;overflow:hidden;margin:16px 16px 0;padding:16px;border-radius:20px;border:1px solid var(--line);
@@ -160,10 +155,6 @@ select.inp{appearance:none;-webkit-appearance:none}
 .done h2{font-size:24px;font-weight:700;margin-top:8px}
 .done p{color:var(--hint);max-width:32ch}
 .err{color:var(--danger);font-size:14px;padding:8px 20px 0}
-.pill{font-size:12px;font-weight:600;border-radius:8px;padding:3px 8px;white-space:nowrap}
-.pill.new{background:#F5B34226;color:var(--gold)}.pill.work{background:#2F6BFF2E;color:var(--link)}.pill.closed{background:var(--cell2);color:var(--hint)}
-.ed{width:84px;text-align:right;border:0;background:var(--cell2);border-radius:10px;padding:7px 9px;font-variant-numeric:tabular-nums}
-.edn{flex:1;min-width:0;border:0;background:transparent;padding:0;font-size:16px}
 .note{margin:18px 16px 0;font-size:13px;color:var(--hint);text-align:center}
 @media (prefers-reduced-motion:no-preference){.scr{animation:sl .22s ease-out}@keyframes sl{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
 @media (max-width:350px){.tile b{font-size:17px}.tile .em{font-size:64px}.chip{width:70px;height:70px}}
@@ -175,52 +166,28 @@ select.inp{appearance:none;-webkit-appearance:none}
 </div>
 <div class="mb" id="mb"><button id="mbb" type="button">Продолжить</button></div>
 
+<script src="data.js"></script>
 <script>
+/* Логика витрины. Тексты и цены — в data.js, здесь их не меняйте. */
 (function(){
+const D=window.SHOWCASE;
+if(!D||!D.home||!D.repair||!D.lunch||!D.rent){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.</div>';document.getElementById('mb').style.display='none';return}
 const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
   try{TG.setHeaderColor('#0B0D12');TG.setBackgroundColor('#0B0D12');if(TG.setBottomBarColor)TG.setBottomBarColor('#0B0D12')}catch(e){}}
-const CONTACT='sanchokrsk'; // ← твой ник в Telegram без @
-const KEY='showcase-proto-v3';
-function openChat(){const u='https://t.me/'+CONTACT;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
-const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid=()=>Math.random().toString(36).slice(2,9);
-const DEF={
-  hero:'Мини-приложения для бизнеса',
-  repair:{works:[{id:'ceil',em:'💡',name:'Натяжной потолок',price:650},{id:'paint',em:'🎨',name:'Покраска стен',price:380},{id:'lam',em:'🪵',name:'Укладка ламината',price:450},{id:'tile',em:'🧱',name:'Укладка плитки',price:1400}],lamp:450,demont:150,rough:200},
-  menu:[
-    {id:'m1',cat:'Комплексы',em:'🍱',name:'Комплекс «Рабочий»',price:390,on:true},
-    {id:'m2',cat:'Комплексы',em:'🥗',name:'Комплекс «Лёгкий»',price:320,on:true},
-    {id:'m3',cat:'Супы',em:'🍲',name:'Борщ',price:160,on:true},
-    {id:'m4',cat:'Супы',em:'🥣',name:'Солянка',price:190,on:true},
-    {id:'m5',cat:'Горячее',em:'🍖',name:'Котлета с пюре',price:230,on:true},
-    {id:'m6',cat:'Горячее',em:'🍛',name:'Плов',price:260,on:false},
-    {id:'m7',cat:'Горячее',em:'🍝',name:'Паста с курицей',price:250,on:true},
-    {id:'m8',cat:'Салаты',em:'🥗',name:'Цезарь',price:240,on:true},
-    {id:'m9',cat:'Напитки',em:'🧃',name:'Морс',price:70,on:true}
-  ],
-  flats:[
-    {id:'f1',em:'🛋️',name:'Студия у набережной',addr:'Центр · 7 мин до метро',guests:2,price:3200,on:true,c1:'#12463E',c2:'#2F9C84'},
-    {id:'f2',em:'🏡',name:'Двушка для семьи',addr:'Спальный район · парковка',guests:4,price:4600,on:true,c1:'#4A2E14',c2:'#B9803F'},
-    {id:'f3',em:'🌆',name:'Лофт с видом',addr:'Деловой квартал · 18 этаж',guests:3,price:5900,on:true,c1:'#1C2550',c2:'#5167C9'}
-  ],
-  leads:[
-    {id:'ex1',src:'Ремонт',title:'Натяжной потолок, 18 м²',who:'Ирина · +7 900 000-00-01',sum:15300,status:'work',ts:Date.now()-86400000,example:true},
-    {id:'ex2',src:'Обеды',title:'2 × Комплекс «Рабочий», 12:30',who:'ООО «Пример» · +7 900 000-00-02',sum:780,status:'new',ts:Date.now()-3600000,example:true}
-  ]
-};
-let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(!S)S=JSON.parse(JSON.stringify(DEF));
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const U={scr:'home',stack:[],rep:{work:'ceil',area:18,lamps:6,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:'12:30',
-  flat:null,start:null,end:null,guests:2,admin:false,atab:'leads',done:null,err:''};
+function openChat(){const u='https://t.me/'+D.contact;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
+const rub=n=>Math.round(+n||0).toLocaleString('ru-RU')+' ₽';
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R=D.repair,L=D.lunch,A=D.rent;
+const U={scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
+  flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
 function go(s){if(U.scr!==s)U.stack.push(U.scr);U.scr=s;U.err='';render();window.scrollTo(0,0)}
 function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,0)}
 function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
-function addLead(src,title,who,sum){S.leads.unshift({id:uid(),src,title,who,sum,status:'new',ts:Date.now()});save()}
 function finish(h,p){U.done={h,p};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
+const target=o=>o==='chat'?'data-act="chat"':`data-go="${esc(o)}"`;
 
 const sec=(h,inner,f)=>`<div class="sec">${h?`<div class="sec-h">${h}</div>`:''}<div class="grp">${inner}</div>${f?`<div class="sec-f">${f}</div>`:''}</div>`;
 const cell=({ico,col,t,s,val,chev,go:g,act,cls=''})=>`<${g||act?'button':'div'} class="cell ${ico?'ic':''} ${cls}" ${g?`data-go="${g}"`:''} ${act||''}>
@@ -228,121 +195,88 @@ const cell=({ico,col,t,s,val,chev,go:g,act,cls=''})=>`<${g||act?'button':'div'} 
 
 /* ---------- screens: each returns {title, sub, html, main:{text,fn,disabled}} ---------- */
 const scr={};
-const tile=({k,t,d,em,c,go:g,act,cls=''})=>`<button class="tile ${cls}" style="--g:${c}66" ${g?`data-go="${g}"`:''} ${act?`data-act="${act}"`:''}>
-  <span class="k">${k}</span><b>${t}</b>${d?`<span class="d">${d}</span>`:''}<span class="em" aria-hidden="true">${em}</span></button>`;
-scr.home=()=>({title:'Витрина решений',sub:'mini app',html:`
- <div class="top"><div class="logo" aria-hidden="true">🧩</div><div class="top-t"><b>${esc(S.hero)}</b><span>Telegram · MAX · браузер</span></div></div>
+const tile=x=>`<button class="tile ${x.wide?'w':''}" style="--g:${esc(x.color)}66" ${target(x.open)}>
+  <span class="k">${esc(x.label)}</span><b>${esc(x.title)}</b>${x.text?`<span class="d">${esc(x.text)}</span>`:''}<span class="em" aria-hidden="true">${esc(x.emoji)}</span></button>`;
+scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
+ <div class="top"><div class="logo" aria-hidden="true">🧩</div><div class="top-t"><b>${esc(H.heading)}</b><span>${esc(H.tagline)}</span></div></div>
  <div class="chips">
   <span class="live" aria-hidden="true"><b>Live</b><i></i></span>
-  ${[['🧮','Расчёт','repair','#F5A524'],['🛒','Заказ','lunch','#34C759'],['📅','Бронь','rent','#8B5CF6'],['⚙️','Админка','admin','#2F6BFF']].map(([e,t,g,c])=>`<button class="chip" data-go="${g}" style="--c:${c}"><span aria-hidden="true">${e}</span>${t}</button>`).join('')}
+  ${H.chips.map(c=>`<button class="chip" ${target(c.open)} style="--c:${esc(c.color)}"><span aria-hidden="true">${esc(c.emoji)}</span>${esc(c.text)}</button>`).join('')}
  </div>
- <button class="promo" data-act="chat"><span class="tx"><b>Обсудить ваш проект ›</b><span>Расскажите о бизнесе — предложим решение и цену</span></span><span class="promo-ic" aria-hidden="true">💬</span></button>
- <div class="bento">
-  ${tile({k:'Демо',t:'Ремонт и отделка',em:'🛠️',c:'#F5A524',go:'repair',cls:'w'})}
-  ${tile({k:'Демо',t:'Обеды',em:'🍱',c:'#22C55E',go:'lunch'})}
-  ${tile({k:'Демо',t:'Аренда',em:'🔑',c:'#8B5CF6',go:'rent'})}
-  ${tile({k:'Попробуйте',t:'Админка владельца',em:'⚙️',c:'#2F6BFF',go:'admin',cls:'w'})}
-  ${tile({k:'Под заказ',t:'Ваш бизнес',d:'Запись, расчёты, заказы, бронь, каталог',em:'🚀',c:'#EC4899',act:'chat',cls:'full'})}
- </div>
- ${sec('Что получает бизнес',
-   cell({ico:'⏱',col:'#FF9500',t:'Заявки без звонков',s:'Клиент сам выбирает и считает'})+
-   cell({ico:'✏️',col:'#2481CC',t:'Своя админка',s:'Цены, меню и фото меняете сами'})+
-   cell({ico:'📱',col:'#8E8E93',t:'Telegram, MAX и браузер',s:'Одно приложение на всех площадках'})+
-   cell({ico:'🔗',col:'#0A84FF',t:'Связка с вашими системами',s:'CRM, учёт, корпоративные сервисы — по проекту'}))}
- <div class="note">Это демо. Всё, что вы вводите, видно только на вашем устройстве и никуда не отправляется.</div>`,
- main:{text:'Обсудить проект',fn:openChat}});
+ <button class="promo" data-act="chat"><span class="tx"><b>${esc(H.promo.title)}</b><span>${esc(H.promo.text)}</span></span><span class="promo-ic" aria-hidden="true">${esc(H.promo.emoji)}</span></button>
+ <div class="bento">${H.tiles.map(tile).join('')}</div>
+ ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:esc(b.emoji),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
+ <div class="note">${esc(H.note)}</div>`,
+ main:{text:H.button,fn:openChat}}};
 
-function repTotal(){const r=S.repair,u=U.rep,w=r.works.find(x=>x.id===u.work)||r.works[0];let t=w.price*u.area;if(u.work==='ceil')t+=u.lamps*r.lamp;if(u.demont)t+=r.demont*u.area;if(u.rough)t+=r.rough*u.area;return{t,w}}
-scr.repair=()=>{const r=S.repair,u=U.rep,{t}=repTotal();return{title:'Мастер ремонта',sub:'демо · калькулятор',html:`
+const curWork=()=>R.works.find(x=>x.id===U.rep.work)||R.works[0];
+function repTotal(){const u=U.rep,w=curWork();let t=w.price*u.area;if(w.lamps)t+=u.lamps*R.lampPrice;if(u.demont)t+=R.demolitionPrice*u.area;if(u.rough)t+=R.materialsPrice*u.area;return{t,w}}
+scr.repair=()=>{const u=U.rep,{t,w}=repTotal();return{title:R.title,sub:R.subtitle,html:`
  <div class="sum"><span>Предварительная цена</span><b id="sumV">от ${rub(t)}</b><span class="em" aria-hidden="true">🧮</span></div>
- <div class="sec"><div class="sec-h">Вид работ</div><div class="opts">${r.works.map(w=>`<button class="opt" data-rw="${w.id}" aria-pressed="${u.work===w.id}"><span class="ck"></span><span class="em" aria-hidden="true">${w.em||'🔨'}</span><b>${esc(w.name)}</b><span class="pr">${rub(w.price)}/м²</span></button>`).join('')}</div></div>
+ <div class="sec"><div class="sec-h">Вид работ</div><div class="opts">${R.works.map(x=>`<button class="opt" data-rw="${esc(x.id)}" aria-pressed="${w.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${esc(x.emoji||'🔨')}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.price)}/м²</span></button>`).join('')}</div></div>
  ${sec('Площадь',`<div class="cell"><span class="tx"><b>Площадь помещения</b></span><span class="val" id="areaV" style="color:var(--text);font-weight:600">${u.area} м²</span></div>
-   <div class="cell" style="padding-top:0"><input id="area" type="range" min="5" max="120" value="${u.area}" aria-label="Площадь"></div>`)}
+   <div class="cell" style="padding-top:0"><input id="area" type="range" min="${R.areaMin}" max="${R.areaMax}" value="${u.area}" aria-label="Площадь"></div>`)}
  ${sec('Дополнительно',
-   (u.work==='ceil'?`<div class="cell"><span class="tx"><b>Точечные светильники</b><span>${rub(r.lamp)} за шт.</span></span><span class="stp"><button data-lamp="-1" aria-label="Меньше">−</button><span>${u.lamps}</span><button data-lamp="1" aria-label="Больше">+</button></span></div>`:'')+
-   `<label class="cell"><span class="tx"><b>Демонтаж старого</b><span>${rub(r.demont)} за м²</span></span><input class="sw" type="checkbox" id="demont" ${u.demont?'checked':''}></label>
-    <label class="cell"><span class="tx"><b>Материалы от нас</b><span>${rub(r.rough)} за м²</span></span><input class="sw" type="checkbox" id="rough" ${u.rough?'checked':''}></label>`,
-   'Точную цену мастер назовёт после бесплатного замера. Цены в демо примерные.')}`,
- main:{text:'Вызвать замерщика · от '+rub(t),fn:()=>go('repairForm')}}};
-scr.repairForm=()=>{const{t,w}=repTotal();return{title:'Заявка на замер',sub:'Мастер ремонта',html:`
+   (w.lamps?`<div class="cell"><span class="tx"><b>Точечные светильники</b><span>${rub(R.lampPrice)} за шт.</span></span><span class="stp"><button data-lamp="-1" aria-label="Меньше">−</button><span>${u.lamps}</span><button data-lamp="1" aria-label="Больше">+</button></span></div>`:'')+
+   `<label class="cell"><span class="tx"><b>Демонтаж старого</b><span>${rub(R.demolitionPrice)} за м²</span></span><input class="sw" type="checkbox" id="demont" ${u.demont?'checked':''}></label>
+    <label class="cell"><span class="tx"><b>Материалы от нас</b><span>${rub(R.materialsPrice)} за м²</span></span><input class="sw" type="checkbox" id="rough" ${u.rough?'checked':''}></label>`,
+   esc(R.note))}`,
+ main:{text:R.button+' · от '+rub(t),fn:()=>go('repairForm')}}};
+scr.repairForm=()=>{const{t,w}=repTotal();return{title:R.formTitle,sub:R.title,html:`
  ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+U.rep.area+' м²',val:'от '+rub(t)}))}
- ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="name"></div>
-   <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон" autocomplete="tel"></div>
-   <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район"></div>`)}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район" autocomplete="off"></div>`,esc(D.formNote))}
  ${sec('Удобный день',`<div class="inpcell"><select class="inp" id="rd">${nextDays(6).map(d=>`<option>${d}</option>`).join('')}</select></div>`)}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('rn').trim())return fail('Укажите имя');if(!phoneOk(val('rp')))return fail('Проверьте телефон: нужно 10–11 цифр');
-   addLead('Ремонт',`${w.name}, ${U.rep.area} м² · ${val('rd')}`,`${val('rn')} · ${val('rp')}`,t);finish('Заявка у мастера','Мастер позвонит и договорится о замере. После замера цена может уточниться.')}}}};
+   finish(R.doneTitle,R.doneText)}}}};
 
-function cartSum(){let n=0,s=0;for(const id in U.cart){const m=S.menu.find(x=>x.id===id);if(m&&m.on){n+=U.cart[id];s+=m.price*U.cart[id]}}return{n,s}}
-scr.lunch=()=>{const cats=['Все',...new Set(S.menu.map(m=>m.cat))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum();return{title:'Обед рядом',sub:'демо · доставка 11:30–15:00',html:`
+const dish=id=>L.menu.find(x=>x.id===id);
+function cartSum(){let n=0,s=0;for(const id in U.cart){const m=dish(id);if(m&&m.available){n+=U.cart[id];s+=m.price*U.cart[id]}}return{n,s}}
+scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum();return{title:L.title,sub:L.subtitle,html:`
  <div class="segc">${['Сегодня','Завтра'].map((d,i)=>`<button data-day="${i}" aria-pressed="${U.day===i}">${d}, ${dayL(i)}</button>`).join('')}</div>
  <div class="segc cats">${cats.map(c=>`<button data-cat="${esc(c)}" aria-pressed="${U.cat===c}">${esc(c)}</button>`).join('')}</div>
- <div class="food">${S.menu.filter(m=>U.cat==='Все'||m.cat===U.cat).map(m=>{const q=U.cart[m.id]||0;return`<div class="fi ${m.on?'':'off'}">
-   ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${m.em||'🍽'}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
-   ${!m.on?'<div class="pr">Закончилось</div>':q?`<div class="pm"><button class="mi" data-add="${m.id}" data-d="-1" aria-label="Убрать">−</button><button class="pl" data-add="${m.id}" data-d="1" aria-label="Добавить">+</button></div>`:`<button class="add" data-add="${m.id}" data-d="1">Добавить</button>`}</div>`}).join('')}</div>
- <div class="note">Бесплатная доставка от 600 ₽. Условия в демо примерные.</div>`,
+ <div class="food">${L.menu.filter(m=>U.cat==='Все'||m.category===U.cat).map(m=>{const q=U.cart[m.id]||0,id=esc(m.id);return`<div class="fi ${m.available?'':'off'}">
+   ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${esc(m.emoji||'🍽')}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
+   ${!m.available?'<div class="pr">Закончилось</div>':q?`<div class="pm"><button class="mi" data-add="${id}" data-d="-1" aria-label="Убрать">−</button><button class="pl" data-add="${id}" data-d="1" aria-label="Добавить">+</button></div>`:`<button class="add" data-add="${id}" data-d="1">Добавить</button>`}</div>`}).join('')}</div>
+ <div class="note">${esc(L.note)}</div>`,
  main:n?{text:`Посмотреть заказ · ${rub(s)}`,fn:()=>go('lunchForm')}:{text:'Выберите блюда',disabled:true}}};
-scr.lunchForm=()=>{const{n,s}=cartSum();const slots=['12:00','12:30','13:00','13:30'];return{title:'Ваш заказ',sub:'Обед рядом',html:`
- ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=S.menu.find(x=>x.id===id);return m&&m.on?`<div class="cell"><span style="font-size:26px">${m.em}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
+scr.lunchForm=()=>{const{s}=cartSum();return{title:'Ваш заказ',sub:L.title,html:`
+ ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=dish(id);return m&&m.available?`<div class="cell"><span style="font-size:26px">${esc(m.emoji)}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
    `<div class="cell"><span class="tx"><b><strong>Итого</strong></b></span><span class="price">${rub(s)}</span></div>`)}
- <div class="sec-h" style="margin:20px 16px 0">Время доставки</div>
- <div class="segc" style="margin-top:0">${slots.map(t=>`<button data-slot="${t}" aria-pressed="${U.slot===t}">${t}</button>`).join('')}</div>
- ${sec('Доставка',`<div class="inpcell"><input class="inp" id="la" placeholder="Адрес офиса, этаж"></div><div class="inpcell"><input class="inp" id="lp" inputmode="tel" placeholder="Телефон"></div>`,'Оплата курьеру картой или наличными.')}
+ <div class="sec-h" style="margin:24px 16px 0">Время доставки</div>
+ <div class="segc" style="margin-top:0">${L.slots.map(t=>`<button data-slot="${esc(t)}" aria-pressed="${U.slot===t}">${esc(t)}</button>`).join('')}</div>
+ ${sec('Доставка',`<div class="inpcell"><input class="inp" id="la" placeholder="Адрес офиса, этаж" autocomplete="off"></div><div class="inpcell"><input class="inp" id="lp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>`,esc(L.paymentNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Заказать · '+rub(s),fn:()=>{if(!val('la').trim())return fail('Укажите адрес');if(!phoneOk(val('lp')))return fail('Проверьте телефон: нужно 10–11 цифр');
-   const items=Object.keys(U.cart).map(id=>{const m=S.menu.find(x=>x.id===id);return m?`${m.name} × ${U.cart[id]}`:''}).filter(Boolean).join(', ');
-   addLead('Обеды',`${items} · ${['сегодня','завтра'][U.day]} ${U.slot}`,`${val('la')} · ${val('lp')}`,s);finish('Заказ принят',`Привезём ${['сегодня','завтра'][U.day]} к ${U.slot}. Столовая уже видит заказ.`)}}}};
+   finish(L.doneTitle,`Привезём ${['сегодня','завтра'][U.day]} к ${U.slot}. Столовая уже видит заказ.`)}}}};
 
-scr.rent=()=>({title:'Квартиры посуточно',sub:'демо',html:S.flats.filter(f=>f.on).map(f=>`<div class="sec"><button class="grp" data-flat="${f.id}" style="display:block;width:100%;text-align:left">
-   <div class="ph" style="background:linear-gradient(160deg,${f.c1},${f.c2})"><span class="em" aria-hidden="true">${f.em||'🏠'}</span><span class="tag">до ${f.guests} гостей</span></div>
-   <div class="cell"><span class="tx"><b style="font-weight:600">${esc(f.name)}</b><span>${esc(f.addr)}</span></span><span class="price">${rub(f.price)}<span style="color:var(--hint);font-weight:400"> /ночь</span></span></div></button></div>`).join('')+
-   '<div class="note">В рабочей версии здесь будут настоящие фото.</div>',main:{text:'Выберите квартиру',disabled:true}});
+const flatPh=(f,tag)=>`<div class="ph" style="background:linear-gradient(160deg,${esc(f.color1)},${esc(f.color2)})"><span class="em" aria-hidden="true">${esc(f.emoji||'🏠')}</span><span class="tag">${tag}</span></div>`;
+scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f=>`<div class="sec"><button class="grp" data-flat="${esc(f.id)}" style="display:block;width:100%;text-align:left">
+   ${flatPh(f,'до '+f.maxGuests+' '+pl(f.maxGuests,'гостя','гостей','гостей'))}
+   <div class="cell"><span class="tx"><b style="font-weight:600">${esc(f.name)}</b><span>${esc(f.address)}</span></span><span class="price">${rub(f.price)}<span style="color:var(--hint);font-weight:400"> /ночь</span></span></div></button></div>`).join('')+
+   `<div class="note">${esc(A.note)}</div>`,main:{text:'Выберите квартиру',disabled:true}});
 const nights=()=>U.start!=null&&U.end!=null?U.end-U.start:0;
-scr.flat=()=>{const f=S.flats.find(x=>x.id===U.flat);const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
+const curFlat=()=>A.flats.find(x=>x.id===U.flat);
+scr.flat=()=>{const f=curFlat();const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
  for(let i=0;i<off;i++)c+='<span></span>';
  for(let i=0;i<28;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const k=(U.start===i||U.end===i)?'edge':(U.start!=null&&U.end!=null&&i>U.start&&i<U.end)?'in':'';
   c+=`<button class="${k}" data-di="${i}" aria-label="${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}">${d.getDate()}</button>`}
- const n=nights();return{title:f.name,sub:f.addr,html:`
- <div class="sec"><div class="grp"><div class="ph" style="background:linear-gradient(160deg,${f.c1},${f.c2})"><span class="em" aria-hidden="true">${f.em||'🏠'}</span><span class="tag">${rub(f.price)} за ночь</span></div></div></div>
+ const n=nights();return{title:f.name,sub:f.address,html:`
+ <div class="sec"><div class="grp">${flatPh(f,rub(f.price)+' за ночь')}</div></div>
  ${sec(U.start==null?'Выберите дату заезда':U.end==null?'Выберите дату выезда':fmtD(U.start)+' — '+fmtD(U.end),`<div class="cal">${['пн','вт','ср','чт','пт','сб','вс'].map(d=>`<span class="dw">${d}</span>`).join('')}${c}</div>`)}
- ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>максимум ${f.guests}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`)}`,
+ ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>максимум ${f.maxGuests}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`)}`,
  main:n?{text:`Забронировать · ${n} ${pl(n,'ночь','ночи','ночей')} · ${rub(n*f.price)}`,fn:()=>go('flatForm')}:{text:'Выберите даты',disabled:true}}};
-scr.flatForm=()=>{const f=S.flats.find(x=>x.id===U.flat),n=nights();return{title:'Бронирование',sub:f.name,html:`
+scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирование',sub:f.name,html:`
  ${sec('Бронь',cell({t:`${fmtD(U.start)} — ${fmtD(U.end)}`,s:`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,val:rub(n*f.price)}))}
- ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон"></div>`,'Хозяин подтвердит даты и пришлёт реквизиты для предоплаты.')}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>`,esc(A.bookingNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: нужно 10–11 цифр');
-   addLead('Аренда',`${f.name}, ${fmtD(U.start)} — ${fmtD(U.end)}, ${U.guests} гост.`,`${val('fn')} · ${val('fp')}`,n*f.price);finish('Заявка отправлена','Хозяин подтвердит бронь и пришлёт реквизиты для предоплаты.')}}}};
-
-scr.lead=()=>({title:'Заявка',sub:'на разработку',html:`
- <div class="prof"><h1>Расскажите о бизнесе</h1><p>Ответим в течение дня и предложим решение с ценой</p></div>
- ${sec('Сфера',`<div class="inpcell"><select class="inp" id="ln"><option>Ремонт и строительство</option><option>Общепит и доставка</option><option>Аренда жилья</option><option>Салон, мастер красоты</option><option>Другое</option></select></div>`)}
- ${sec('Что нужно',['Расчёт стоимости','Онлайн-запись','Заказы и оплата','Бронирование'].map(x=>`<label class="cell"><span class="tx"><b>${x}</b></span><input class="sw" type="checkbox" name="need" value="${x}"></label>`).join(''))}
- ${sec('Контакт',`<div class="inpcell"><input class="inp" id="lc" placeholder="Имя и телефон или @ник"></div>`,'Демо: заявка появится в «Админке» на вашем устройстве.')}
- ${U.err?`<div class="err">${U.err}</div>`:''}`,
- main:{text:'Отправить',fn:()=>{const c=val('lc').trim();if(c.length<3)return fail('Оставьте имя и телефон или ник');
-   const needs=[...document.querySelectorAll('input[name=need]:checked')].map(x=>x.value).join(', ')||'не указано';addLead('Разработка',`${val('ln')}: ${needs}`,c,0);finish('Заявка отправлена','Свяжемся в течение дня и предложим решение для вашего бизнеса.')}}});
+   finish(A.doneTitle,A.doneText)}}}};
 
 scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
- ${sec('Так это видит владелец',cell({t:'Открыть админку',cls:'link',go:'admin'}))}
- ${sec('',cell({t:'Хочу такое для своего бизнеса',cls:'link',act:'data-act="chat"'}))}`,main:{text:'На витрину',fn:home}});
-
-scr.admin=()=>{
- if(!U.admin)return{title:'Админка',sub:'вход',html:`<div class="prof"><div class="ava" style="background:linear-gradient(145deg,#8E8E93,#48484A)">⚙</div><h1>Вход для владельца</h1><p>Здесь меняются цены, меню и квартиры, и видны все заявки</p></div>
-  ${sec('',`<div class="inpcell"><input class="inp" id="pw" type="password" placeholder="Пароль (в демо: demo)"></div>`,'Демо-режим: изменения видны только на вашем устройстве.')}
-  ${U.err?`<div class="err">${U.err}</div>`:''}`,main:{text:'Войти',fn:()=>{if(val('pw')==='demo'){U.admin=true;U.err='';render()}else fail('Неверный пароль. В демо: demo')}}};
- const st={new:'Новая',work:'В работе',closed:'Закрыта'},t=U.atab;let h='';
- if(t==='leads')h=sec('Заявки',S.leads.length?S.leads.map(l=>`<div class="cell" style="align-items:flex-start"><span class="tx"><b><strong>${esc(l.src)}</strong>${l.example?' · пример':''}</b><span style="color:var(--text)">${esc(l.title)}</span><span>${esc(l.who)}</span><span>${new Date(l.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${l.sum?' · '+rub(l.sum):''}</span></span>
-   <span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="pill ${l.status}">${st[l.status]}</span><select class="ed" style="width:auto" data-lst="${l.id}" aria-label="Статус">${Object.entries(st).map(([k,v])=>`<option value="${k}" ${l.status===k?'selected':''}>${v}</option>`).join('')}</select></span></div>`).join(''):cell({t:'Заявок пока нет',s:'Пройдите любое демо до конца'}));
- if(t==='repair')h=sec('Цена за м²',S.repair.works.map((w,i)=>`<div class="cell"><span class="tx"><b>${esc(w.name)}</b></span><input class="ed" type="number" min="0" data-rp="${i}" value="${w.price}" aria-label="Цена ${esc(w.name)}"></div>`).join(''))+
-   sec('Дополнительно',[['lamp','Светильник, шт'],['demont','Демонтаж, м²'],['rough','Материалы, м²']].map(([k,n])=>`<div class="cell"><span class="tx"><b>${n}</b></span><input class="ed" type="number" min="0" data-rx="${k}" value="${S.repair[k]}" aria-label="${n}"></div>`).join(''),'Новые цены сразу применяются в калькуляторе.');
- if(t==='menu')h=sec('Меню дня',S.menu.map((m,i)=>`<div class="cell"><span style="font-size:24px">${m.em}</span><input class="edn" data-mn="${i}" value="${esc(m.name)}" aria-label="Название"><input class="ed" type="number" min="0" data-mp="${i}" value="${m.price}" aria-label="Цена"><input class="sw" type="checkbox" data-mo="${i}" ${m.on?'checked':''} aria-label="Есть сегодня"></div>`).join('')+
-   cell({t:'Добавить блюдо',cls:'link',act:'data-act="addDish"'}),'Выключите блюдо, и в меню появится «Закончилось».');
- if(t==='flats')h=sec('Квартиры',S.flats.map((f,i)=>`<div class="cell"><span class="tx"><b>${esc(f.name)}</b><span>цена за ночь</span></span><input class="ed" type="number" min="0" data-fp="${i}" value="${f.price}" aria-label="Цена за ночь"><input class="sw" type="checkbox" data-fo="${i}" ${f.on?'checked':''} aria-label="Показывать"></div>`).join(''),'Выключенная квартира пропадает из списка.');
- if(t==='texts')h=sec('Заголовок витрины',`<div class="inpcell"><input class="inp" id="hero" value="${esc(S.hero)}"></div>`)+sec('',cell({t:'Сбросить данные прототипа',cls:'link',act:'data-act="reset"'}));
- return{title:'Админка',sub:'правки сразу видны в демо',html:`<div class="segc">${[['leads','Заявки'],['repair','Ремонт'],['menu','Меню'],['flats','Квартиры'],['texts','Ещё']].map(([k,v])=>`<button data-at="${k}" aria-pressed="${t===k}">${v}</button>`).join('')}</div>${h}`,
-  main:{text:'Выйти из админки',fn:()=>{U.admin=false;home()}}}};
+ ${sec('',cell({t:esc(D.done.chatLink),cls:'link',act:'data-act="chat"'}))}`,main:{text:D.done.button,fn:home}});
 
 /* ---------- helpers ---------- */
 const val=id=>($(id)||{}).value||'';
@@ -361,41 +295,29 @@ function render(){const v=scr[U.scr]();const isHome=U.scr==='home';
  if(TG){const M=TG.MainButton;M.setParams(v.main.disabled?{color:'#2A2E38',text_color:'#7C8190'}:{color:'#2F6BFF',text_color:'#FFFFFF'});M.setText(v.main.text);v.main.disabled?M.disable():M.enable();M.show();isHome?TG.BackButton.hide():TG.BackButton.show()}
 }
 function liveMain(text){$('mbb').textContent=text;if(TG)TG.MainButton.setText(text)}
-function repLive(){const t=repTotal().t;liveMain('Вызвать замерщика · от '+rub(t));if($('sumV'))$('sumV').textContent='от '+rub(t)}
+function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if($('sumV'))$('sumV').textContent='от '+rub(t)}
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-at]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g]');if(!b)return;const d=b.dataset;
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
- if(d.act==='addDish'){S.menu.push({id:uid(),cat:'Горячее',em:'🍽',name:'Новое блюдо',price:200,on:true});save();return render()}
- if(d.act==='reset'){S=JSON.parse(JSON.stringify(DEF));save();U.cart={};return render()}
  if(d.rw){U.rep.work=d.rw;return render()}
  if(d.lamp){U.rep.lamps=Math.max(0,Math.min(40,U.rep.lamps+ +d.lamp));return render()}
  if(d.day){U.day=+d.day;return render()}
  if(d.cat){U.cat=d.cat;return render()}
  if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
  if(d.slot){U.slot=d.slot;const keep={la:val('la'),lp:val('lp')};render();for(const k in keep)if($(k))$(k).value=keep[k];return}
- if(d.flat){U.flat=d.flat;U.start=U.end=null;U.guests=2;return go('flat')}
+ if(d.flat){U.flat=d.flat;U.start=U.end=null;U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
  if(d.di){const i=+d.di;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else U.end=i;return render()}
- if(d.g){const f=S.flats.find(x=>x.id===U.flat);U.guests=Math.max(1,Math.min(f.guests,U.guests+ +d.g));return render()}
- if(d.at){U.atab=d.at;return render()}
+ if(d.g){U.guests=Math.max(1,Math.min(curFlat().maxGuests,U.guests+ +d.g));return render()}
 });
-document.addEventListener('input',e=>{const t=e.target,d=t.dataset,num=Math.max(0,+t.value||0);
- if(t.id==='area'){U.rep.area=+t.value;$('areaV').textContent=t.value+' м²';repLive();curMain=scr.repair().main;return}
- if(t.id==='hero'){S.hero=t.value;save();return}
- if(d.rp!=null){S.repair.works[+d.rp].price=num;save()}
- if(d.rx){S.repair[d.rx]=num;save()}
- if(d.mp!=null){S.menu[+d.mp].price=num;save()}
- if(d.mn!=null){S.menu[+d.mn].name=t.value;save()}
- if(d.fp!=null){S.flats[+d.fp].price=num;save()}
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='area'){U.rep.area=+t.value;$('areaV').textContent=t.value+' м²';repLive();curMain=scr.repair().main}
 });
-document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
- if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive();return}
- if(d.mo!=null){S.menu[+d.mo].on=t.checked;save()}
- if(d.fo!=null){S.flats[+d.fo].on=t.checked;save()}
- if(d.lst){const l=S.leads.find(x=>x.id===d.lst);if(l){l.status=t.value;save();render()}}
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
 });
 render();
 })();
