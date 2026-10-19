@@ -2,3 +2,5 @@
 Лицензия MIT, Copyright (c) Microsoft Corporation. Уменьшены до 160 px.
 Новый значок: найти в репозитории папку assets/<Название>/3D/, скачать PNG,
 положить сюда под именем латиницей (например, house.png) и указать в data.js: icon: 'house'.
+
+Исключение: food_*.png — картинки блюд, сгенерированы владельцем в ChatGPT (исходник: design/refs/02-food-icons-chatgpt.png).

@@ -110,17 +110,20 @@ window.SHOWCASE = {
     slots: ['12:00', '12:30', '13:00', '13:30'],   // время доставки на выбор
     slotStart: '12:30',
 
-    // Меню. category — вкладка; available: false — «Закончилось»
+    // Меню. category — вкладка (порядок вкладок = порядок блюд); available: false — «Закончилось»
+    // Картинки блюд (food_*) — генерация владельца в ChatGPT, фон убран
     menu: [
-      { id: 'm1', category: 'Комплексы', icon: 'plate', name: 'Комплекс «Рабочий»', price: 390, available: true },
-      { id: 'm2', category: 'Комплексы', icon: 'green_salad', name: 'Комплекс «Лёгкий»',  price: 320, available: true },
-      { id: 'm3', category: 'Супы',      icon: 'pot_of_food', name: 'Борщ',               price: 160, available: true },
-      { id: 'm4', category: 'Супы',      icon: 'bowl_with_spoon', name: 'Солянка',            price: 190, available: true },
-      { id: 'm5', category: 'Горячее',   icon: 'meat_on_bone', name: 'Котлета с пюре',     price: 230, available: true },
-      { id: 'm6', category: 'Горячее',   icon: 'curry_rice', name: 'Плов',               price: 260, available: false },
-      { id: 'm7', category: 'Горячее',   icon: 'spaghetti', name: 'Паста с курицей',    price: 250, available: true },
-      { id: 'm8', category: 'Салаты',    icon: 'green_salad', name: 'Цезарь',             price: 240, available: true },
-      { id: 'm9', category: 'Напитки',   icon: 'beverage_box', name: 'Морс',               price: 70,  available: true },
+      { id: 'm3',  category: 'Супы',     icon: 'food_borscht',  name: 'Борщ со сметаной',        price: 220, available: true },
+      { id: 'm1',  category: 'Горячее',  icon: 'food_pelmeni',  name: 'Пельмени со сметаной',    price: 280, available: true },
+      { id: 'm5',  category: 'Горячее',  icon: 'food_cutlets',  name: 'Котлеты с пюре',          price: 230, available: true },
+      { id: 'm6',  category: 'Горячее',  icon: 'food_plov',     name: 'Плов',                    price: 260, available: false },
+      { id: 'm2',  category: 'Горячее',  icon: 'food_vareniki', name: 'Вареники с картошкой',    price: 220, available: true },
+      { id: 'm4',  category: 'Горячее',  icon: 'food_shashlik', name: 'Шашлык из свинины',       price: 390, available: true },
+      { id: 'm8',  category: 'Салаты',   icon: 'food_salad',    name: 'Греческий салат',         price: 240, available: true },
+      { id: 'm7',  category: 'Выпечка',  icon: 'food_blini',    name: 'Блины со сметаной',       price: 160, available: true },
+      { id: 'm10', category: 'Выпечка',  icon: 'food_pastry',   name: 'Пирожки с мясом, 2 шт.',  price: 140, available: true },
+      { id: 'm11', category: 'Десерты',  icon: 'food_dessert',  name: 'Чизкейк',                 price: 230, available: true },
+      { id: 'm9',  category: 'Напитки',  icon: 'food_drink',    name: 'Морс',                    price: 90,  available: true },
     ],
 
     doneTitle: 'Заказ принят',
