@@ -165,6 +165,22 @@ select.inp{appearance:none;-webkit-appearance:none}
 .done p{color:var(--hint);max-width:32ch}
 .err{color:var(--danger);font-size:14px;padding:8px 20px 0}
 .note{margin:18px 16px 0;font-size:13px;color:var(--hint);text-align:center}
+
+/* admin */
+.fld{display:block;padding:10px 16px 2px;position:relative}
+.fld + .fld::before{content:"";position:absolute;top:0;right:0;left:16px;border-top:1px solid var(--sep)}
+.fld span{display:block;font-size:12px;color:var(--hint)}
+.fld .inp{padding:4px 0 10px}
+.ed{width:84px;flex:none;text-align:right;border:0;background:var(--cell2);border-radius:10px;padding:8px 9px;font-variant-numeric:tabular-nums;font-weight:600;outline:none;font-size:16px}
+.ed:focus,.edn:focus{box-shadow:0 0 0 2px var(--btn)}
+.edn{flex:1;min-width:0;border:0;background:transparent;padding:6px 4px;border-radius:8px;font-size:16px;outline:none}
+.cell .u{color:var(--hint);font-size:14px}
+.arow{gap:8px}.arow .ai{font-size:24px;flex:none}
+.mv{display:flex;gap:4px;flex:none}
+.mv button{width:32px;height:32px;border-radius:9px;background:var(--cell2);font-size:15px}
+.mv button:disabled{opacity:.3}
+.amsg{margin:14px 16px 0;padding:12px 14px;border-radius:14px;font-size:14px}
+.amsg.ok{background:#22C55E26;color:#4ADE80}.amsg.err{background:#FF6B6B26;color:var(--danger)}
 @media (prefers-reduced-motion:no-preference){.scr{animation:sl .22s ease-out}@keyframes sl{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
 @media (max-width:350px){.tile b{font-size:17px}.tile .em{font-size:64px}.chip{width:70px;height:70px}}
 </style></head><body>
@@ -176,14 +192,17 @@ select.inp{appearance:none;-webkit-appearance:none}
 <div class="mb" id="mb"><button id="mbb" type="button">Продолжить</button></div>
 
 <script>
-/* Логика витрины. Тексты и цены — в data.js, здесь их не меняйте. */
+/* Логика витрины. Тексты и цены — в data.json на сайте (правит админка) или data.js (исходник), здесь их не меняйте. */
+const ADMIN_API='https://functions.yandexcloud.net/d4ecqonkgf6dhc15g88r'; // Cloud Function «showcase-admin» (admin/function)
 function showMsg(t){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">'+t+'</div>';document.getElementById('mb').style.display='none'}
-// data.js грузится всегда свежим (?v=время), чтобы телефон не взял старую копию из кэша
-(function(){const s=document.createElement('script');s.src='data.js?v='+Date.now();
- s.onload=start;s.onerror=()=>showMsg('Не удалось загрузить данные витрины. Проверьте интернет и откройте ещё раз.');
- document.head.appendChild(s)})();
+// Данные: data.json с сайта (актуальные, их меняет админка); если его нет (локально) — data.js. Всегда без кэша.
+(function(){const v='?v='+Date.now();
+ const viaScript=()=>{const s=document.createElement('script');s.src='data.js'+v;s.onload=start;
+  s.onerror=()=>showMsg('Не удалось загрузить данные витрины. Проверьте интернет и откройте ещё раз.');document.head.appendChild(s)};
+ if(location.protocol==='file:')return viaScript();
+ fetch('data.json'+v,{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{window.SHOWCASE=d;start()}).catch(viaScript)})();
 function start(){
-const D=window.SHOWCASE;
+let D=window.SHOWCASE;
 if(!D||!D.home||!D.repair||!D.lunch||!D.rent||!D.build)return showMsg('Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.');
 const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
@@ -191,8 +210,10 @@ if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
 function openChat(){const u='https://t.me/'+D.contact;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
 const rub=n=>Math.round(+n||0).toLocaleString('ru-RU')+' ₽';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const R=D.repair,L=D.lunch,A=D.rent,B=D.build;
-const U={bld:{house:null,pack:B.packageStart||B.packages[0].id,ex:{}},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
+let R=D.repair,L=D.lunch,A=D.rent,B=D.build;
+const clone=o=>JSON.parse(JSON.stringify(o));
+let IS_OWNER=false;
+const U={bld:{house:null,pack:B.packageStart||B.packages[0].id,ex:{}},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
   flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
@@ -222,6 +243,7 @@ scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
  <button class="promo" data-act="chat"><span class="tx"><b>${esc(H.promo.title)}</b><span>${esc(H.promo.text)}</span></span><span class="promo-ic" aria-hidden="true">${ic(H.promo.icon)}</span></button>
  <div class="bento">${H.tiles.map(tile).join('')}</div>
  ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:ic(b.icon),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
+ ${IS_OWNER?sec('Только для вас',cell({ico:ic('gear'),col:'#8E8E93',t:'Админка',s:'Цены, тексты, порядок плиток',chev:1,go:'admin'})):''}
  <div class="note">${esc(H.note)}</div>`,
  main:{text:H.button,fn:openChat}}};
 
@@ -315,6 +337,49 @@ scr.buildForm=()=>{const{t,h,p}=bldTotal();return{title:B.formTitle,sub:B.title,
  main:{text:'Отправить заявку',fn:()=>{if(!val('bn').trim())return fail('Укажите имя');if(!phoneOk(val('bp')))return fail('Проверьте телефон: нужно 10–11 цифр');
    finish(B.doneTitle,B.doneText)}}}};
 
+/* ---------- админка (только владелец; сохранение — через Cloud Function) ---------- */
+const getP=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
+const setP=(o,p,v)=>{const k=p.split('.'),last=k.pop();k.reduce((a,x)=>a[x],o)[last]=v};
+function admDirty(){U.adm.dirty=true;U.adm.msg='';setMain(admMain());const u=$('admUndo');if(u)u.hidden=false;const m=document.querySelector('.amsg');if(m)m.remove()}
+const admMain=()=>U.adm.saving?{text:'Сохраняю…',disabled:true}:{text:U.adm.dirty?'Сохранить изменения':'Изменений нет',fn:admSave,disabled:!U.adm.dirty};
+function admSave(){const a=U.adm;a.saving=true;setMain(admMain());
+ fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'save',initData:TG?TG.initData:'',data:a.draft})})
+  .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.ok)throw new Error(j.error||('ошибка '+r.status));
+    D=window.SHOWCASE=clone(a.draft);R=D.repair;L=D.lunch;A=D.rent;B=D.build;a.dirty=false;a.msg='ok';
+    if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}))
+  .catch(e=>{a.msg='Не сохранилось: '+e.message;if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')})
+  .finally(()=>{a.saving=false;render()})}
+const fT=(p,label)=>`<label class="fld"><span>${label}</span><input class="inp" data-p="${p}" value="${esc(getP(U.adm.draft,p))}"></label>`;
+const fN=(p,label,u='₽')=>`<div class="cell"><span class="tx"><b>${label}</b></span><input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}" value="${esc(getP(U.adm.draft,p))}" aria-label="${label}"><span class="u">${u}</span></div>`;
+const fB=p=>`<input class="sw" type="checkbox" data-t="bool" data-p="${p}" ${getP(U.adm.draft,p)?'checked':''}>`;
+const mv=(p,i,n)=>`<span class="mv"><button data-mv="${p}" data-i="${i}" data-d="-1" ${i?'':'disabled'} aria-label="Выше">↑</button><button data-mv="${p}" data-i="${i}" data-d="1" ${i<n-1?'':'disabled'} aria-label="Ниже">↓</button></span>`;
+// строка списка: значок, название (редактируемое), число, переключатель, стрелки
+const row=(p,i,o)=>`<div class="cell arow"><span class="ai">${ic(getP(U.adm.draft,p+'.'+i+'.icon'))}</span><input class="edn" data-p="${p}.${i}.${o.name}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.name))}" aria-label="Название">${o.num?`<input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}.${i}.${o.num}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.num))}" aria-label="Цена">`:''}${o.bool?fB(p+'.'+i+'.'+o.bool):''}${o.move?mv(p,i,o.n):''}</div>`;
+const rows=(p,o)=>getP(U.adm.draft,p).map((_,i,a)=>row(p,i,{...o,n:a.length})).join('');
+scr.admin=()=>{
+ if(!IS_OWNER)return{title:'Админка',sub:'',html:'<div class="note" style="margin-top:60px">Админка доступна только владельцу витрины.</div>',main:{text:D.done.button,fn:home}};
+ const a=U.adm;if(!a.draft)a.draft=clone(D);const t=a.tab;let h='';
+ if(t==='home')h=sec('Заголовки',fT('home.heading','Заголовок')+fT('home.tagline','Подзаголовок')+fT('home.promo.title','Баннер: заголовок')+fT('home.promo.text','Баннер: текст'))+
+   sec('Плитки: порядок и названия',rows('home.tiles',{name:'title',move:1}))+
+   sec('Кнопки под заголовком: порядок',rows('home.chips',{name:'text',move:1}))+
+   sec('Что получает бизнес',rows('home.benefits',{name:'title',move:1}));
+ if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
+   sec('Виды работ, ₽ за м²',rows('repair.works',{name:'name',num:'price',move:1}))+
+   sec('Дополнительно',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
+ if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.note','Подпись под меню'))+
+   sec('Меню: цена ₽ и «есть сегодня»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
+ if(t==='rent')h=sec('Экран',fT('rent.title','Название')+fT('rent.subtitle','Подзаголовок')+fT('rent.note','Подпись под списком'))+
+   sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.');
+ if(t==='build')h=sec('Экран',fT('build.title','Название')+fT('build.subtitle','Подзаголовок'))+
+   sec('Проекты: площадь м² и показ',rows('build.houses',{name:'name',num:'area',bool:'show'}))+
+   sec('Комплектации, ₽ за м²',rows('build.packages',{name:'name',num:'pricePerM2'}))+
+   sec('Дополнительные работы, ₽',rows('build.extras',{name:'name',num:'price'}));
+ const msg=a.msg==='ok'?'<div class="amsg ok">Сохранено ✓ Клиенты уже видят изменения.</div>':a.msg?`<div class="amsg err">${esc(a.msg)}</div>`:'';
+ return{title:'Админка',sub:'видна только вам',html:`<div class="segc">${[['home','Главная'],['repair','Ремонт'],['lunch','Обеды'],['rent','Аренда'],['build','Стройка']].map(([k,v])=>`<button data-at="${k}" aria-pressed="${t===k}">${v}</button>`).join('')}</div>
+  ${msg}${h}
+  <div class="note">Изменения увидят все посетители после «Сохранить». Перед каждым сохранением делается резервная копия.</div>
+  <div id="admUndo" ${a.dirty?'':'hidden'}>${sec('',cell({t:'Отменить несохранённые изменения',cls:'link',act:'data-act="admUndo"'}))}</div>`,main:admMain()}};
+
 scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
  ${sec('',cell({t:esc(D.done.chatLink),cls:'link',act:'data-act="chat"'}))}`,main:{text:D.done.button,fn:home}});
 
@@ -331,15 +396,20 @@ let curMain=null;
 function render(){const v=scr[U.scr]();const isHome=U.scr==='home';
  $('tgh').innerHTML=`<button class="l" data-act="${isHome?'':'back'}" aria-label="${isHome?'Закрыть':'Назад'}">${isHome?'Закрыть':'‹ Назад'}</button><div class="c"><b>${esc(v.title)}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div><span class="r" aria-hidden="true"><i>⋯</i></span>`;
  $('app').innerHTML=`<div class="scr">${v.html}</div>`;
- curMain=v.main;const b=$('mbb');b.textContent=v.main.text;b.disabled=!!v.main.disabled;
- if(TG){const M=TG.MainButton;M.setParams(v.main.disabled?{color:'#2A2E38',text_color:'#7C8190'}:{color:'#2F6BFF',text_color:'#FFFFFF'});M.setText(v.main.text);v.main.disabled?M.disable():M.enable();M.show();isHome?TG.BackButton.hide():TG.BackButton.show()}
+ setMain(v.main);
+ if(TG)isHome?TG.BackButton.hide():TG.BackButton.show();
 }
+function setMain(m){curMain=m;const b=$('mbb');b.textContent=m.text;b.disabled=!!m.disabled;
+ if(TG){const M=TG.MainButton;M.setParams(m.disabled?{color:'#2A2E38',text_color:'#7C8190'}:{color:'#2F6BFF',text_color:'#FFFFFF'});M.setText(m.text);m.disabled?M.disable():M.enable();M.show()}}
 function liveMain(text){$('mbb').textContent=text;if(TG)TG.MainButton.setText(text)}
 function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if($('sumV'))$('sumV').textContent='от '+rub(t)}
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-house],[data-pack]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-house],[data-pack],[data-at],[data-mv]');if(!b)return;const d=b.dataset;
+ if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
+ if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
+ if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.house){U.bld.house=d.house;U.bld.ex={};return go('house')}
  if(d.pack){U.bld.pack=d.pack;return render()}
  if(d.go)return go(d.go);
@@ -356,6 +426,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.g){U.guests=Math.max(1,Math.min(curFlat().maxGuests,U.guests+ +d.g));return render()}
 });
 document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.p&&U.adm.draft){const ty=t.dataset.t;setP(U.adm.draft,t.dataset.p,ty==='num'?Math.max(0,+String(t.value).replace(',','.')||0):ty==='bool'?t.checked:t.value);admDirty();return}
  // площадь: ползунок, ввод числом или длина × ширина — всё синхронно
  if(t.id==='area'||t.id==='areaN'||t.id==='dimL'||t.id==='dimW'){const u=U.rep,num=x=>parseFloat(String(x).replace(',','.'));
   if(t.id==='area'){u.area=+t.value;u.L=u.W='';$('areaN').value=fmtA(u.area);$('dimL').value=$('dimW').value=''}
@@ -367,6 +438,9 @@ document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
  if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
+// Владелец? Спрашиваем сервер (он проверяет подпись Telegram). Остальным кнопка «Админка» не показывается.
+if(TG&&TG.initData&&ADMIN_API)fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'check',initData:TG.initData})})
+ .then(r=>r.ok?r.json():null).then(j=>{if(j&&j.ok){IS_OWNER=true;if(U.scr==='home')render()}}).catch(()=>{});
 render();
 }
 </script>
