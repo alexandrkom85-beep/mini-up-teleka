@@ -4,7 +4,7 @@
 <link rel="icon" href="data:,">
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: dark "premium" Telegram Mini App — Telegram header, bento tiles with gradient glow + Fluent Emoji 3D icons (prototype/icons), chip row, blue MainButton. Always dark (ref: design/refs/01) */
+/* Layout: dark "premium" Telegram Mini App — Telegram header, bento tiles with gradient glow + Fluent Emoji 3D icons (prototype/icons), blue MainButton. Always dark (ref: design/refs/01) */
 :root{
   --page:#0B0D12; --cell:#171A21; --cell2:#1E222B; --head:#0B0D12;
   --text:#FFFFFF; --hint:#8B90A0; --link:#5B9BFF;
@@ -35,27 +35,13 @@ h1,h2,p{margin:0}
 .tgh .c span{display:block;font-size:12px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .in-tg .tgh{display:none}
 
-/* home: brand row, chips, promo, bento */
+/* home: brand row, bento */
 .top{display:flex;align-items:center;gap:12px;padding:16px 16px 0}
 .logo{width:44px;height:44px;border-radius:14px;flex:none;background:linear-gradient(145deg,#2A3350,#1A2036);border:1px solid var(--line);display:grid;place-items:center;font-size:28px;box-shadow:0 6px 18px -6px #F59E0B99}
 .top-t{min-width:0}
 .top-t b{display:block;font-size:17px;font-weight:600;text-wrap:balance}
 .top-t span{font-size:13px;color:var(--hint)}
-.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:16px 16px 4px}
-.chips::-webkit-scrollbar{display:none}
-.live{flex:none;width:28px;border-radius:14px;background:var(--cell);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--hint)}
-.live b{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:500}
-.live i{width:7px;height:7px;border-radius:50%;background:#34C759;box-shadow:0 0 8px #34C759}
-.chip{flex:none;width:78px;height:78px;border-radius:18px;background:linear-gradient(180deg,var(--cell2),var(--cell));border:1px solid var(--line);
-  box-shadow:inset 0 -2px 0 var(--c),0 10px 18px -12px var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:500}
-.chip span{font-size:28px;line-height:1;filter:drop-shadow(0 4px 6px rgb(0 0 0 / .4))}
-.promo{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:12px 16px 0;padding:14px 16px;border-radius:20px;text-align:left;overflow:hidden;position:relative;
-  background:linear-gradient(100deg,#172036 0%,#1B2F63 62%,#2F6BFF 100%);border:1px solid var(--line)}
-.promo .tx{flex:1;min-width:0}
-.promo b{display:block;font-size:16px;font-weight:600}
-.promo .tx span{display:block;font-size:13px;color:#B7C2DA;margin-top:2px}
-.promo-ic{font-size:46px;line-height:1;transform:rotate(-10deg);margin:-6px -4px -10px 0;filter:drop-shadow(0 8px 14px rgb(0 0 0 / .45))}
-.bento{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:12px 16px 0}
+.bento{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:20px 16px 0}
 .tile{grid-column:span 2;position:relative;overflow:hidden;height:136px;border-radius:20px;padding:14px;text-align:left;display:flex;flex-direction:column;
   background:radial-gradient(130% 100% at 100% 100%,var(--g) 0%,transparent 62%),linear-gradient(160deg,#1C2029,#14171D);border:1px solid var(--line)}
 .tile.w{grid-column:span 3}.tile.full{grid-column:span 5;height:112px}
@@ -182,7 +168,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .amsg{margin:14px 16px 0;padding:12px 14px;border-radius:14px;font-size:14px}
 .amsg.ok{background:#22C55E26;color:#4ADE80}.amsg.err{background:#FF6B6B26;color:var(--danger)}
 @media (prefers-reduced-motion:no-preference){.scr{animation:sl .22s ease-out}@keyframes sl{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
-@media (max-width:350px){.tile b{font-size:17px}.tile .em{font-size:64px}.chip{width:70px;height:70px}}
+@media (max-width:350px){.tile b{font-size:17px}.tile .em{font-size:64px}}
 </style></head><body>
 
 <div class="app">
@@ -213,14 +199,14 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 let R=D.repair,L=D.lunch,A=D.rent,B=D.build;
 const clone=o=>JSON.parse(JSON.stringify(o));
 let IS_OWNER=false;
-const U={bld:{house:null,pack:B.packageStart||B.packages[0].id,ex:{}},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',day:0,slot:L.slotStart||L.slots[0],
+const U={bld:{house:null,pack:B.packageStart||B.packages[0].id,ex:{}},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',
   flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
 function go(s){if(U.scr!==s)U.stack.push(U.scr);U.scr=s;U.err='';render();window.scrollTo(0,0)}
 function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,0)}
 function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
-function finish(h,p){U.done={h,p};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
+function finish(h,p,x){U.done={h,p,...x};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
 // значок: имя файла из icons/ → картинка; иначе — текст (эмодзи)
 const ic=v=>/^[a-z0-9_]+$/.test(v||'')?`<img class="ic3d" src="icons/${v}.png" alt="" decoding="async">`:esc(v||'');
 const fmtA=a=>(+a).toLocaleString('ru-RU',{maximumFractionDigits:1});
@@ -236,11 +222,6 @@ const tile=x=>`<button class="tile ${x.full?'full':x.wide?'w':''}" style="--g:${
   <span class="k">${esc(x.label)}</span><b>${esc(x.title)}</b>${x.text?`<span class="d">${esc(x.text)}</span>`:''}<span class="em" aria-hidden="true">${ic(x.icon)}</span></button>`;
 scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
  <div class="top"><div class="logo" aria-hidden="true">${ic('puzzle_piece')}</div><div class="top-t"><b>${esc(H.heading)}</b><span>${esc(H.tagline)}</span></div></div>
- <div class="chips">
-  <span class="live" aria-hidden="true"><b>Live</b><i></i></span>
-  ${H.chips.map(c=>`<button class="chip" ${target(c.open)} style="--c:${esc(c.color)}"><span aria-hidden="true">${ic(c.icon)}</span>${esc(c.text)}</button>`).join('')}
- </div>
- <button class="promo" data-act="chat"><span class="tx"><b>${esc(H.promo.title)}</b><span>${esc(H.promo.text)}</span></span><span class="promo-ic" aria-hidden="true">${ic(H.promo.icon)}</span></button>
  <div class="bento">${H.tiles.map(tile).join('')}</div>
  ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:ic(b.icon),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
  ${IS_OWNER?sec('Только для вас',cell({ico:ic('gear'),col:'#8E8E93',t:'Админка',s:'Цены, тексты, порядок плиток',chev:1,go:'admin'})):''}
@@ -265,32 +246,56 @@ scr.repair=()=>{const u=U.rep,{t,w}=repTotal();return{title:R.title,sub:R.subtit
 scr.repairForm=()=>{const{t,w}=repTotal();return{title:R.formTitle,sub:R.title,html:`
  ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+fmtA(U.rep.area)+' м²',val:'от '+rub(t)}))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="off"></div>
-   <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район" autocomplete="off"></div>`,esc(D.formNote))}
  ${sec('Удобный день',`<div class="inpcell"><select class="inp" id="rd">${nextDays(6).map(d=>`<option>${d}</option>`).join('')}</select></div>`)}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
- main:{text:'Отправить заявку',fn:()=>{if(!val('rn').trim())return fail('Укажите имя');if(!phoneOk(val('rp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+ main:{text:'Отправить заявку',fn:()=>{if(!val('rn').trim())return fail('Укажите имя');if(!phoneOk(val('rp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
    finish(R.doneTitle,R.doneText)}}}};
 
 const dish=id=>L.menu.find(x=>x.id===id);
 function cartSum(){let n=0,s=0;for(const id in U.cart){const m=dish(id);if(m&&m.available){n+=U.cart[id];s+=m.price*U.cart[id]}}return{n,s}}
-scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum();return{title:L.title,sub:L.subtitle,html:`
- <div class="segc">${['Сегодня','Завтра'].map((d,i)=>`<button data-day="${i}" aria-pressed="${U.day===i}">${d}, ${dayL(i)}</button>`).join('')}</div>
+// Обеды — на ближайший рабочий день, приём до L.orderDeadline накануне (дата и время — с телефона клиента)
+function lunchPlan(){const now=new Date(),[h,m]=(L.orderDeadline||'19:00').split(':').map(Number),d=new Date(now);d.setHours(0,0,0,0);let dl;
+ for(;;){d.setDate(d.getDate()+1);dl=new Date(d);dl.setDate(dl.getDate()-1);dl.setHours(h,m,0,0);if(d.getDay()%6&&now<dl)break}
+ const tmr=new Date(now);tmr.setDate(tmr.getDate()+1);const dm=x=>x.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+ return{day:(d.toDateString()===tmr.toDateString()?'завтра':d.toLocaleDateString('ru-RU',{weekday:'long'}))+', '+dm(d),
+  until:`до ${h}:${String(m).padStart(2,'0')} ${dl.toDateString()===now.toDateString()?'сегодня':dm(dl)}`}}
+const lunchDay=()=>lunchPlan().day;
+const lunchWin=()=>'с '+(L.deliveryWindow||'12:00–15:00').replace('–',' до ');
+const cap=s=>s.replace(/^./,c=>c.toUpperCase());
+const OF=()=>L.office||{name:'Ваш офис',address:''};
+scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum(),P=lunchPlan();return{title:L.title,sub:L.subtitle,html:`
+ <div class="sec" style="margin-top:16px"><div class="grp">${cell({ico:ic('cityscape_at_dusk'),col:'#8B5CF6',t:esc(OF().name),s:esc(OF().address)})}</div></div>
+ <div class="sec-h" style="margin:20px 16px 0;padding:0 4px">Меню на ${P.day}</div>
+ <div class="sec-f" style="margin:0 16px;padding-top:2px">Приём заказов ${P.until} · доставка ${lunchWin()}</div>
  <div class="segc cats">${cats.map(c=>`<button data-cat="${esc(c)}" aria-pressed="${U.cat===c}">${esc(c)}</button>`).join('')}</div>
  <div class="food">${L.menu.filter(m=>U.cat==='Все'||m.category===U.cat).map(m=>{const q=U.cart[m.id]||0,id=esc(m.id);return`<div class="fi ${m.available?'':'off'}">
    ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${ic(m.icon)}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
    ${!m.available?'<div class="pr">Закончилось</div>':q?`<div class="pm"><button class="mi" data-add="${id}" data-d="-1" aria-label="Убрать">−</button><button class="pl" data-add="${id}" data-d="1" aria-label="Добавить">+</button></div>`:`<button class="add" data-add="${id}" data-d="1">Добавить</button>`}</div>`}).join('')}</div>
- <div class="note">${esc(L.note)}</div>`,
+ ${L.note?`<div class="note">${esc(L.note)}</div>`:''}`,
  main:n?{text:`Посмотреть заказ · ${rub(s)}`,fn:()=>go('lunchForm')}:{text:'Выберите блюда',disabled:true}}};
 scr.lunchForm=()=>{const{s}=cartSum();return{title:'Ваш заказ',sub:L.title,html:`
- ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=dish(id);return m&&m.available?`<div class="cell"><span style="font-size:28px">${ic(m.icon)}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
+ ${sec('Заказ на '+lunchDay(),Object.keys(U.cart).map(id=>{const m=dish(id);return m&&m.available?`<div class="cell"><span style="font-size:28px">${ic(m.icon)}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
    `<div class="cell"><span class="tx"><b><strong>Итого</strong></b></span><span class="price">${rub(s)}</span></div>`)}
- <div class="sec-h" style="margin:24px 16px 0">Время доставки</div>
- <div class="segc" style="margin-top:0">${L.slots.map(t=>`<button data-slot="${esc(t)}" aria-pressed="${U.slot===t}">${esc(t)}</button>`).join('')}</div>
- ${sec('Доставка',`<div class="inpcell"><input class="inp" id="la" placeholder="Адрес офиса, этаж" autocomplete="off"></div><div class="inpcell"><input class="inp" id="lp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>`,esc(L.paymentNote)+' '+esc(D.formNote))}
+ ${sec('Доставка в ваш офис',cell({ico:ic('cityscape_at_dusk'),col:'#8B5CF6',t:esc(OF().name),s:esc(OF().address)})+cell({ico:ic('stopwatch'),col:'#FF9500',t:esc(cap(lunchDay())),s:esc(lunchWin())}))}
+ ${sec('Кто заказывает',`<div class="inpcell"><input class="inp" id="ln" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="lp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>`,'Телефон — чтобы столовая могла связаться по заказу. '+esc(L.paymentNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
- main:{text:'Заказать · '+rub(s),fn:()=>{if(!val('la').trim())return fail('Укажите адрес');if(!phoneOk(val('lp')))return fail('Проверьте телефон: нужно 10–11 цифр');
-   finish(L.doneTitle,`Привезём ${['сегодня','завтра'][U.day]} к ${U.slot}. Столовая уже видит заказ.`)}}}};
+ main:{text:'Заказать · '+rub(s),fn:()=>{if(!val('ln').trim())return fail('Укажите имя');if(!phoneOk(val('lp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
+   U.myLunch={person:val('ln').trim(),items:{...U.cart}};
+   finish(L.doneTitle,`Привезём ${lunchDay()}, ${lunchWin()}, в ${OF().name}. Столовая уже видит заказ.`,{next:{t:'Как это видит столовая',go:'kitchen'}})}}}};
+// Демо-экран менеджера столовой: выдуманные заказы коллег + заказ из демо. Ничего не сохраняется
+scr.kitchen=()=>{const all=[...(L.kitchenSample||[]),...(U.myLunch?[{office:OF().name,...U.myLunch,me:1}]:[])],
+ line=it=>Object.entries(it).filter(([id])=>dish(id)).map(([id,q])=>`${dish(id).name}${q>1?' ×'+q:''}`).join(', '),
+ sum=it=>Object.entries(it).reduce((a,[id,q])=>a+(dish(id)?dish(id).price*q:0),0),offices=[...new Set(all.map(o=>o.office))],tot={};
+ all.forEach(o=>{for(const id in o.items)if(dish(id))tot[id]=(tot[id]||0)+o.items[id]});
+ return{title:'Столовая',sub:'пример · так видит менеджер',html:`
+ <div class="sec-h" style="margin:16px 16px 0;padding:0 4px">Заказы на ${lunchDay()}</div>
+ ${offices.map(of=>{const os=all.filter(o=>o.office===of);return sec(`${esc(of)} · ${os.length} чел. · ${rub(os.reduce((a,o)=>a+sum(o.items),0))}`,
+   os.map(o=>cell({t:esc(o.person)+(o.me?' (вы)':''),s:esc(line(o.items)),val:rub(sum(o.items))})).join(''))}).join('')}
+ ${sec('Сводка для кухни',Object.entries(tot).map(([id,q])=>cell({ico:ic(dish(id).icon),col:'#22C55E',t:esc(dish(id).name),val:'×'+q})).join(''))}
+ <div class="note">Пример: заказы коллег выдуманы, ваш — из демо. В рабочей версии этот список собирается сам, без переписывания из чата.</div>`,
+ main:{text:D.done.button,fn:home}}};
 
 const flatPh=(f,tag)=>`<div class="ph" style="background:linear-gradient(160deg,${esc(f.color1)},${esc(f.color2)})"><span class="em" aria-hidden="true">${ic(f.icon)}</span><span class="tag">${tag}</span></div>`;
 scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f=>`<div class="sec"><button class="grp" data-flat="${esc(f.id)}" style="display:block;width:100%;text-align:left">
@@ -310,9 +315,9 @@ scr.flat=()=>{const f=curFlat();const t0=new Date();t0.setHours(0,0,0,0);const o
  main:n?{text:`Забронировать · ${n} ${pl(n,'ночь','ночи','ночей')} · ${rub(n*f.price)}`,fn:()=>go('flatForm')}:{text:'Выберите даты',disabled:true}}};
 scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирование',sub:f.name,html:`
  ${sec('Бронь',cell({t:`${fmtD(U.start)} — ${fmtD(U.end)}`,s:`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,val:rub(n*f.price)}))}
- ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>`,esc(A.bookingNote)+' '+esc(D.formNote))}
+ ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>`,esc(A.bookingNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
- main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+ main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
    finish(A.doneTitle,A.doneText)}}}};
 
 const house=()=>B.houses.find(x=>x.id===U.bld.house);
@@ -330,16 +335,16 @@ scr.house=()=>{const{t,h,p}=bldTotal();return{title:h.name,sub:h.info,html:`
 scr.buildForm=()=>{const{t,h,p}=bldTotal();return{title:B.formTitle,sub:B.title,html:`
  ${sec('Ваш расчёт',cell({t:esc(h.name),s:esc(p.name)+' · '+h.area+' м²',val:'от '+rub(t)}))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="bn" placeholder="Имя" autocomplete="off"></div>
-   <div class="inpcell"><input class="inp" id="bp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>
+   <div class="inpcell"><input class="inp" id="bp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="ba" placeholder="Где участок: район или посёлок" autocomplete="off"></div>`,esc(D.formNote))}
  ${sec('Когда планируете начать',`<div class="inpcell"><select class="inp" id="bs">${B.startOptions.map(o=>`<option>${esc(o)}</option>`).join('')}</select></div>`)}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
- main:{text:'Отправить заявку',fn:()=>{if(!val('bn').trim())return fail('Укажите имя');if(!phoneOk(val('bp')))return fail('Проверьте телефон: нужно 10–11 цифр');
+ main:{text:'Отправить заявку',fn:()=>{if(!val('bn').trim())return fail('Укажите имя');if(!phoneOk(val('bp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
    finish(B.doneTitle,B.doneText)}}}};
 
 /* ---------- админка (только владелец; сохранение — через Cloud Function) ---------- */
 const getP=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
-const setP=(o,p,v)=>{const k=p.split('.'),last=k.pop();k.reduce((a,x)=>a[x],o)[last]=v};
+const setP=(o,p,v)=>{const k=p.split('.'),last=k.pop();k.reduce((a,x)=>a[x]??(a[x]={}),o)[last]=v};
 function admDirty(){U.adm.dirty=true;U.adm.msg='';setMain(admMain());const u=$('admUndo');if(u)u.hidden=false;const m=document.querySelector('.amsg');if(m)m.remove()}
 const admMain=()=>U.adm.saving?{text:'Сохраняю…',disabled:true}:{text:U.adm.dirty?'Сохранить изменения':'Изменений нет',fn:admSave,disabled:!U.adm.dirty};
 function admSave(){const a=U.adm;a.saving=true;setMain(admMain());
@@ -359,15 +364,14 @@ const rows=(p,o)=>getP(U.adm.draft,p).map((_,i,a)=>row(p,i,{...o,n:a.length})).j
 scr.admin=()=>{
  if(!IS_OWNER)return{title:'Админка',sub:'',html:'<div class="note" style="margin-top:60px">Админка доступна только владельцу витрины.</div>',main:{text:D.done.button,fn:home}};
  const a=U.adm;if(!a.draft)a.draft=clone(D);const t=a.tab;let h='';
- if(t==='home')h=sec('Заголовки',fT('home.heading','Заголовок')+fT('home.tagline','Подзаголовок')+fT('home.promo.title','Баннер: заголовок')+fT('home.promo.text','Баннер: текст'))+
+ if(t==='home')h=sec('Заголовки',fT('home.heading','Заголовок')+fT('home.tagline','Подзаголовок'))+
    sec('Плитки: порядок и названия',rows('home.tiles',{name:'title',move:1}))+
-   sec('Кнопки под заголовком: порядок',rows('home.chips',{name:'text',move:1}))+
    sec('Что получает бизнес',rows('home.benefits',{name:'title',move:1}));
  if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
    sec('Виды работ, ₽ за м²',rows('repair.works',{name:'name',num:'price',move:1}))+
    sec('Дополнительно',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
- if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.note','Подпись под меню'))+
-   sec('Меню: цена ₽ и «есть сегодня»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
+ if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.office.name','Офис в демо: название')+fT('lunch.office.address','Офис в демо: адрес')+fT('lunch.note','Подпись под меню'))+
+   sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
  if(t==='rent')h=sec('Экран',fT('rent.title','Название')+fT('rent.subtitle','Подзаголовок')+fT('rent.note','Подпись под списком'))+
    sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.');
  if(t==='build')h=sec('Экран',fT('build.title','Название')+fT('build.subtitle','Подзаголовок'))+
@@ -381,11 +385,15 @@ scr.admin=()=>{
   <div id="admUndo" ${a.dirty?'':'hidden'}>${sec('',cell({t:'Отменить несохранённые изменения',cls:'link',act:'data-act="admUndo"'}))}</div>`,main:admMain()}};
 
 scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
+ ${U.done.next?sec('',cell({t:esc(U.done.next.t),chev:1,go:U.done.next.go})):''}
  ${sec('',cell({t:esc(D.done.chatLink),cls:'link',act:'data-act="chat"'}))}`,main:{text:D.done.button,fn:home}});
 
 /* ---------- helpers ---------- */
 const val=id=>($(id)||{}).value||'';
-const phoneOk=v=>v.replace(/\D/g,'').length>=10;
+// Телефон РФ: ровно 11 цифр, начинается с 7 (8 заменяем на 7); при вводе — маска +7 (999) 123-45-67
+const phoneOk=v=>/^7\d{10}$/.test(v.replace(/\D/g,''));
+function phoneMask(v){let d=v.replace(/\D/g,'');if(!d)return'';if(d[0]==='8')d='7'+d.slice(1);else if(d[0]!=='7')d='7'+d;d=d.slice(0,11);
+ const p=[d.slice(1,4),d.slice(4,7),d.slice(7,9),d.slice(9,11)];return'+7'+(p[0]?` (${p[0]}`:'')+(p[1]?`) ${p[1]}`:'')+(p[2]?`-${p[2]}`:'')+(p[3]?`-${p[3]}`:'')}
 function fail(m){U.err=m;const keep={};document.querySelectorAll('input[id],select[id]').forEach(e=>keep[e.id]=e.type==='checkbox'?e.checked:e.value);render();for(const k in keep){const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k]}}if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')}
 function dayL(i){const d=new Date();d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
 function nextDays(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i+1);return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'})})}
@@ -406,7 +414,7 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-day],[data-cat],[data-add],[data-slot],[data-flat],[data-di],[data-g],[data-house],[data-pack],[data-at],[data-mv]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-pack],[data-at],[data-mv]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
@@ -417,15 +425,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.act==='chat')return openChat();
  if(d.rw){U.rep.work=d.rw;return render()}
  if(d.lamp){U.rep.lamps=Math.max(0,Math.min(40,U.rep.lamps+ +d.lamp));return render()}
- if(d.day){U.day=+d.day;return render()}
  if(d.cat){U.cat=d.cat;return render()}
  if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
- if(d.slot){U.slot=d.slot;const keep={la:val('la'),lp:val('lp')};render();for(const k in keep)if($(k))$(k).value=keep[k];return}
  if(d.flat){U.flat=d.flat;U.start=U.end=null;U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
  if(d.di){const i=+d.di;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else U.end=i;return render()}
  if(d.g){U.guests=Math.max(1,Math.min(curFlat().maxGuests,U.guests+ +d.g));return render()}
 });
 document.addEventListener('input',e=>{const t=e.target;
+ if(t.inputMode==='tel'){if(e.inputType!=='deleteContentBackward')t.value=phoneMask(t.value);return}
  if(t.dataset.p&&U.adm.draft){const ty=t.dataset.t;setP(U.adm.draft,t.dataset.p,ty==='num'?Math.max(0,+String(t.value).replace(',','.')||0):ty==='bool'?t.checked:t.value);admDirty();return}
  // площадь: ползунок, ввод числом или длина × ширина — всё синхронно
  if(t.id==='area'||t.id==='areaN'||t.id==='dimL'||t.id==='dimW'){const u=U.rep,num=x=>parseFloat(String(x).replace(',','.'));

@@ -32,7 +32,7 @@ function verifyInitData(initData) {
 function validate(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Нет данных';
   for (const k of ['home', 'repair', 'lunch', 'rent', 'build', 'done']) if (!d[k] || typeof d[k] !== 'object') return 'Нет раздела ' + k;
-  const lists = [['repair', 'works'], ['lunch', 'menu'], ['rent', 'flats'], ['build', 'houses'], ['build', 'packages'], ['build', 'extras'], ['home', 'tiles'], ['home', 'chips']];
+  const lists = [['repair', 'works'], ['lunch', 'menu'], ['rent', 'flats'], ['build', 'houses'], ['build', 'packages'], ['build', 'extras'], ['home', 'tiles']];
   for (const [a, b] of lists) if (!Array.isArray(d[a][b]) || !d[a][b].length) return `Пустой список ${a}.${b}`;
   let bad = null;
   (function walk(o, path) {

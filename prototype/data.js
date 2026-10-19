@@ -34,29 +34,13 @@ window.SHOWCASE = {
     heading: 'Мини-приложения для бизнеса',
     tagline: 'Telegram · MAX · браузер',
 
-    // Ряд квадратных кнопок под заголовком
-    chips: [
-      { icon: 'triangular_ruler', text: 'Расчёт',   open: 'repair', color: '#F5A524' },
-      { icon: 'shopping_cart', text: 'Заказ',    open: 'lunch',  color: '#34C759' },
-      { icon: 'calendar', text: 'Бронь',    open: 'rent',   color: '#8B5CF6' },
-      { icon: 'building_construction', text: 'Стройка',  open: 'build',  color: '#F97316' },
-      { icon: 'speech_balloon', text: 'Написать', open: 'chat',   color: '#2F6BFF' },
-    ],
-
-    // Синий баннер — открывает чат
-    promo: {
-      title: 'Обсудить ваш проект ›',
-      text: 'Расскажите о бизнесе — предложим решение и цену',
-      icon: 'speech_balloon',
-    },
-
     // Плитки. wide: true — широкая (в ряду широкая + узкая), full: true — на всю ширину
     tiles: [
       { label: 'Демо',      title: 'Ремонт и отделка', text: '',                                       icon: 'hammer_and_wrench', color: '#F5A524', open: 'repair', wide: true },
       { label: 'Демо',      title: 'Обеды',            text: '',                                       icon: 'food_borscht', color: '#22C55E', open: 'lunch' },
       { label: 'Демо',      title: 'Аренда',           text: '',                                       icon: 'key', color: '#8B5CF6', open: 'rent' },
       { label: 'Демо',      title: 'Дома и бани',      text: 'Проект, комплектация, смета',            icon: 'building_construction', color: '#F97316', open: 'build',  wide: true },
-      { label: 'Под заказ', title: 'Ваш бизнес',       text: 'Запись, расчёты, заказы, бронь, каталог', icon: 'rocket', color: '#EC4899', open: 'chat',   full: true },
+      { label: 'Под заказ', title: 'Нет вашей ниши?',  text: 'Сделаем приложение под ваш бизнес', icon: 'rocket', color: '#EC4899', open: 'chat',   full: true },
     ],
 
     benefitsTitle: 'Что получает бизнес',
@@ -104,11 +88,23 @@ window.SHOWCASE = {
   /* ───────────── 4. ДЕМО «ДОСТАВКА ОБЕДОВ» ───────────── */
   lunch: {
     title: 'Обед рядом',
-    subtitle: 'демо · доставка 11:30–15:00',
-    note: 'Бесплатная доставка от 600 ₽. Условия в демо примерные.',
+    subtitle: 'демо · заказ на следующий рабочий день',
+    note: '',                              // подпись под меню; пусто — не показывается
     paymentNote: 'Оплата курьеру картой или наличными.',
-    slots: ['12:00', '12:30', '13:00', '13:30'],   // время доставки на выбор
-    slotStart: '12:30',
+    deliveryWindow: '12:00–15:00',         // время доставки (дата — следующий рабочий день)
+    orderDeadline: '19:00',                // заказы на завтра принимаются до этого времени сегодня
+
+    // Офис сотрудника: в рабочей версии подставляется из ссылки офиса, в демо — пример
+    office: { name: 'ООО «Ромашка»', address: 'ул. Ленина, 5, 3 этаж, офис 301' },
+
+    // Экран «Как это видит столовая»: выдуманные заказы коллег (блюда — по id из меню)
+    kitchenSample: [
+      { office: 'ООО «Ромашка»',    person: 'Анна',    items: { m3: 1, m5: 1 } },
+      { office: 'ООО «Ромашка»',    person: 'Сергей',  items: { m1: 1, m9: 1 } },
+      { office: 'ООО «Ромашка»',    person: 'Ольга',   items: { m8: 1, m11: 1 } },
+      { office: 'ООО «ТехноСтрой»', person: 'Игорь',   items: { m4: 1, m10: 1 } },
+      { office: 'ООО «ТехноСтрой»', person: 'Марина',  items: { m3: 1, m7: 1 } },
+    ],
 
     // Меню. category — вкладка (порядок вкладок = порядок блюд); available: false — «Закончилось»
     // Картинки блюд (food_*) — генерация владельца в ChatGPT, фон убран
