@@ -39,7 +39,7 @@ window.SHOWCASE = {
       { label: 'Демо',      title: 'Ремонт и отделка', text: '',                                       icon: 'hammer_and_wrench', color: '#F5A524', open: 'repair', wide: true },
       { label: 'Демо',      title: 'Обеды',            text: '',                                       icon: 'food_borscht', color: '#22C55E', open: 'lunch' },
       { label: 'Демо',      title: 'Аренда',           text: '',                                       icon: 'key', color: '#8B5CF6', open: 'rent' },
-      { label: 'Демо',      title: 'Дома и бани',      text: 'Проект, комплектация, смета',            icon: 'building_construction', color: '#F97316', open: 'build',  wide: true },
+      { label: 'Демо',      title: 'Дома и бани',      text: 'Размер, отделка, фундамент',            icon: 'building_construction', color: '#F97316', open: 'build',  wide: true },
       { label: 'Под заказ', title: 'Нет вашей ниши?',  text: 'Сделаем приложение под ваш бизнес', icon: 'rocket', color: '#EC4899', open: 'chat',   full: true },
     ],
 
