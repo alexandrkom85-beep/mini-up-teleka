@@ -131,6 +131,12 @@ select.inp{appearance:none;-webkit-appearance:none}
 .fi.off{opacity:.4}
 
 /* rent */
+.gal{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 16px;scrollbar-width:none}.gal::-webkit-scrollbar{display:none}
+.gal .gi{flex:0 0 80%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;scroll-snap-align:center;position:relative;border:1px solid var(--line);display:block;padding:0}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
+.gal .gi .ph{height:100%}.gal .gi .tag{position:absolute;left:12px;bottom:12px;background:rgb(0 0 0 / .5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font-size:13px;font-weight:600;border-radius:10px;padding:5px 10px}
+.lb{position:fixed;inset:0;z-index:50;background:rgb(0 0 0 / .92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.lb img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:12px}.lb span{color:#fff;font-size:15px}
 .ph{height:170px;position:relative;display:flex;align-items:flex-end;padding:12px;overflow:hidden}
 .ph .tag{background:rgb(0 0 0 / .5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font-size:13px;font-weight:600;border-radius:10px;padding:5px 10px;position:relative}
 .ph .em{position:absolute;right:14px;top:50%;transform:translateY(-55%) rotate(-8deg);font-size:84px;line-height:1;filter:drop-shadow(0 12px 18px rgb(0 0 0 / .45))}
@@ -363,6 +369,10 @@ const consultCell=()=>sec('',cell({ico:ic('mobile_phone'),col:'#2F6BFF',t:esc(B.
 const stepSlider=(id,label,vals,cur)=>`<div class="cell"><span class="tx"><b>${label}</b></span><span class="val" id="${id}V">${fm(cur)} м</span></div>
  <div class="cell" style="padding-top:0;flex-direction:column;align-items:stretch;gap:4px"><input id="${id}" type="range" min="0" max="${vals.length-1}" step="1" value="${Math.max(0,vals.indexOf(cur))}" aria-label="${label}">
  <div class="ticks">${vals.map(v=>`<span>${fm(v)}</span>`).join('')}</div></div>`;
+// мини-галерея: фото 4:3 листаются вбок; без фото — заглушка с подписью; нажатие на фото — во весь экран
+const gallery=h=>(h.gallery||[]).length?`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">Варианты</div><div class="gal">${h.gallery.map((g,i)=>g.img
+ ?`<button class="gi" data-gal="${i}"><img src="photos/${esc(g.img)}" alt="${esc(g.caption)}" loading="lazy" decoding="async"><span class="tag">${esc(g.caption)}</span></button>`
+ :`<div class="gi">${flatPh(h,esc(g.caption))}</div>`).join('')}</div>${h.gallery.some(g=>!g.img)?'<div class="sec-f" style="margin:0 16px">В рабочей версии здесь будут фото ваших построек.</div>':''}`:'';
 const dimLine=()=>{const{h,a}=bldTotal(),b=U.bld;return`${fm(b.w)}×${fm(b.l)} м · ${fm(a)} м² · срок около ${h.months||1} ${pl(h.months||1,'месяца','месяцев','месяцев')}`};
 const terrLine=()=>U.bld.terr==='none'?'':`Терраса ${fm(U.bld.terr==='w'?U.bld.w:U.bld.l)} × ${fm(U.bld.td)} м = ${fm(terrArea())} м² · ${rub(B.terracePricePerM2||0)} за м²`;
 scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map(h=>`<div class="sec"><button class="grp" data-house="${esc(h.id)}" style="display:block;width:100%;text-align:left">
@@ -371,6 +381,7 @@ scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map
    consultCell()+`<div class="note">${esc(B.note)}</div>`,main:{text:'Выберите, что строим',disabled:true}});
 scr.house=()=>{const{t,h}=bldTotal(),b=U.bld,ds=nums(B.terraceDepths);return{title:h.name,sub:h.info,html:`
  <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span id="bdim">${dimLine()}</span><span class="em" aria-hidden="true">${ic(h.icon)}</span></div>
+ ${gallery(h)}
  ${sec('Размер',stepSlider('bW','Ширина',nums(h.widths),b.w)+stepSlider('bL','Длина',nums(h.lengths),b.l))}
  ${(B.options||[]).map(g=>`<div class="sec"><div class="sec-h">${esc(g.title)}</div><div class="opts ${g.items.length===3?'three':''}">${g.items.map(x=>`<button class="opt" data-og="${esc(g.id)}" data-oi="${esc(x.id)}" aria-pressed="${optSel(g).id===x.id}"><span class="ck"></span><b>${esc(x.name)}</b><span class="pr">${esc(x.text||'')}</span><span class="pr">${x.pricePerM2?'+'+rub(x.pricePerM2)+'/м²':'без доплаты'}</span></button>`).join('')}</div></div>`).join('')}
  ${ds.length?`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">Терраса</div><div class="segc" style="margin-top:0">
@@ -475,12 +486,13 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-tr],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.off){U.off=+d.off;return go('office')}
  if(d.house){bldPick(B.houses.find(x=>x.id===d.house));return go('house')}
+ if(d.gal){const g=house().gallery[+d.gal],o=document.createElement('div');o.className='lb';o.innerHTML=`<img src="photos/${esc(g.img)}" alt=""><span>${esc(g.caption)}</span>`;o.onclick=()=>o.remove();document.body.append(o);return}
  if(d.og){U.bld.opt[d.og]=d.oi;return render()}
  if(d.tr){U.bld.terr=d.tr;return render()}
  if(d.go)return go(d.go);

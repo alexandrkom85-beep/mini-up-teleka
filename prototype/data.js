@@ -158,10 +158,15 @@ window.SHOWCASE = {
     // (дробные — через точку: 2.4). Площадь = ширина × длина. pricePerM2 — базовая цена за 1 м²;
     // months — примерный срок; foundation — фундамент, выбранный сразу;
     // show: false — скрыть; color1/color2 — цвет обложки
+    // gallery — мини-галерея «Варианты»: img — файл из prototype/photos (jpg, лучше 1200×900, 4:3);
+    // пока img пустой, показывается заглушка с подписью
     houses: [
-      { id: 'cabin', icon: 'house', name: 'Бытовка', info: 'Для дачи и стройки', widths: '2, 2.4, 3, 4.4, 4.8', lengths: '2, 4, 6', pricePerM2: 15000, months: 1, foundation: 'none', show: true, color1: '#2A2340', color2: '#7A68C4' },
-      { id: 'bath', icon: 'hut', name: 'Баня', info: 'Парная, мойка, комната отдыха', widths: '2, 4, 6, 8', lengths: '4, 6, 8', pricePerM2: 28000, months: 2, foundation: 'piles', show: true, color1: '#3B2414', color2: '#A86B3C' },
-      { id: 'frame', icon: 'house_with_garden', name: 'Каркасный дом', info: 'Для жизни круглый год', widths: '6, 8, 10, 12', lengths: '6, 8, 10, 12', pricePerM2: 22000, months: 4, foundation: 'piles', show: true, color1: '#173A2A', color2: '#4E9B6F' },
+      { id: 'cabin', icon: 'house', name: 'Бытовка', info: 'Для дачи и стройки', widths: '2, 2.4, 3, 4.4, 4.8', lengths: '2, 4, 6', pricePerM2: 15000, months: 1, foundation: 'none', gallery: [{ img: '', caption: 'Бытовка 2,4×6 с тамбуром' }, { img: '', caption: 'Бытовка с террасой' }, { img: '', caption: 'Внутри: чистовая отделка' }],
+        show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'bath', icon: 'hut', name: 'Баня', info: 'Парная, мойка, комната отдыха', widths: '2, 4, 6, 8', lengths: '4, 6, 8', pricePerM2: 28000, months: 2, foundation: 'piles', gallery: [{ img: '', caption: 'Баня 4×6 с террасой' }, { img: '', caption: 'Парная' }, { img: '', caption: 'Комната отдыха' }],
+        show: true, color1: '#3B2414', color2: '#A86B3C' },
+      { id: 'frame', icon: 'house_with_garden', name: 'Каркасный дом', info: 'Для жизни круглый год', widths: '6, 8, 10, 12', lengths: '6, 8, 10, 12', pricePerM2: 22000, months: 4, foundation: 'piles', gallery: [{ img: '', caption: 'Дом 8×10 с террасой' }, { img: '', caption: 'Гостиная' }, { img: '', caption: 'Дом зимой' }],
+        show: true, color1: '#173A2A', color2: '#4E9B6F' },
     ],
 
     // Выбор на экране постройки. Цена каждого пункта — за 1 м² площади, добавляется к базовой.

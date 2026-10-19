@@ -31,5 +31,9 @@ if [ "$1" = "--data" ] || [ "$(curl -s -o /dev/null -w '%{http_code}' "https://$
   rm -f "$J"; echo "data.json обновлён из prototype/data.js"
 fi
 "$YC" storage s3 cp prototype/icons/     "s3://$B/icons/" --recursive --exclude "*.txt" --cache-control "max-age=86400" --only-show-errors $P
+# фото для галерей (если есть)
+if ls prototype/photos/*.jpg >/dev/null 2>&1; then
+  "$YC" storage s3 cp prototype/photos/ "s3://$B/photos/" --recursive --exclude "*.md" --cache-control "max-age=86400" --only-show-errors $P
+fi
 
 echo "Опубликовано: https://$B.website.yandexcloud.net/"
