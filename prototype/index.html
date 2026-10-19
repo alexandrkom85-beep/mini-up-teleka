@@ -144,6 +144,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .cal .dw{font-size:12px;color:var(--hint);padding-block:4px}
 .cal button{height:40px;border-radius:20px;font-size:16px;font-variant-numeric:tabular-nums}
 .cal button.in{background:var(--soft);border-radius:0}
+.cal button.busy{text-decoration:line-through;color:var(--hint);opacity:.45;pointer-events:none}
 .cal button.edge{background:var(--btn);color:var(--btn-text)}
 
 /* MainButton (simulated) */
@@ -215,7 +216,9 @@ function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,
 function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
 function finish(h,p,x){U.done={h,p,...x};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
 // значок: имя файла из icons/ → картинка; иначе — текст (эмодзи)
-const ic=v=>/^[a-z0-9_]+$/.test(v||'')?`<img class="ic3d" src="icons/${v}.png" alt="" decoding="async">`:esc(v||'');
+// ICON_VER — поднять при замене картинок с теми же именами (иначе Telegram сутки показывает старые)
+const ICON_VER='2';
+const ic=v=>/^[a-z0-9_]+$/.test(v||'')?`<img class="ic3d" src="icons/${v}.png?v=${ICON_VER}" alt="" decoding="async">`:esc(v||'');
 const fmtA=a=>(+a).toLocaleString('ru-RU',{maximumFractionDigits:1});
 const target=o=>o==='chat'?'data-act="chat"':`data-go="${esc(o)}"`;
 
@@ -333,20 +336,25 @@ scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f
    ${flatPh(f,'до '+f.maxGuests+' '+pl(f.maxGuests,'гостя','гостей','гостей'))}
    <div class="cell"><span class="tx"><b style="font-weight:600">${esc(f.name)}</b><span>${esc(f.address)}</span></span><span class="price">${rub(f.price)}<span style="color:var(--hint);font-weight:400"> /ночь</span></span></div></button></div>`).join('')+
    `<div class="note">${esc(A.note)}</div>`,main:{text:'Выберите квартиру',disabled:true}});
+// Занятые даты (демо): flat.busy — номера дней от сегодня, «3-5, 12»; если не задано — пример по id квартиры.
+// В рабочей версии — из броней на сервере и календарей других площадок
+function busyDays(f){const set=new Set();let src=f.busy;
+ if(src==null){const h=[...String(f.id)].reduce((a,c)=>a*31+c.charCodeAt(0),7);src=`${3+h%4}-${5+h%4}, ${11+h%5}, ${17+h%3}-${19+h%3}`}
+ String(src).split(/,\s*/).forEach(r=>{const[a,b]=r.split('-').map(Number);if(a>=0)for(let i=a;i<=(b>=a?b:a);i++)set.add(i)});return set}
 const nights=()=>U.start!=null&&U.end!=null?U.end-U.start:0;
 const curFlat=()=>A.flats.find(x=>x.id===U.flat);
 // Аренда: гости сверх основных мест — доп. спальные места (за ночь), доп. услуги — за проживание
 const extraGuests=()=>Math.max(0,U.guests-curFlat().maxGuests);
 function rentTotal(){const f=curFlat(),n=nights();let t=n*(f.price+extraGuests()*(A.extraBedPrice||0));(A.services||[]).forEach(x=>{if(U.sv[x.id])t+=x.price});return t}
 const rentSummary=()=>[`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,extraGuests()?`доп. мест: ${extraGuests()}`:'',...(A.services||[]).filter(x=>U.sv[x.id]).map(x=>x.name.toLowerCase())].filter(Boolean).join(' · ');
-scr.flat=()=>{const f=curFlat();const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
+scr.flat=()=>{const f=curFlat(),BZ=busyDays(f);const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
  for(let i=0;i<off;i++)c+='<span></span>';
- for(let i=0;i<28;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const k=(U.start===i||U.end===i)?'edge':(U.start!=null&&U.end!=null&&i>U.start&&i<U.end)?'in':'';
-  c+=`<button class="${k}" data-di="${i}" aria-label="${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}">${d.getDate()}</button>`}
+ for(let i=0;i<28;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const busy=BZ.has(i),k=busy?'busy':(U.start===i||U.end===i)?'edge':(U.start!=null&&U.end!=null&&i>U.start&&i<U.end)?'in':'';
+  c+=`<button class="${k}" data-di="${i}" ${busy?'disabled':''} aria-label="${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}${busy?', занято':''}">${d.getDate()}</button>`}
  const n=nights(),T=rentTotal(),ex=extraGuests(),cap=f.maxGuests+(f.extraBeds||0);return{title:f.name,sub:f.address,html:`
  <div class="sum"><span>${rub(f.price)} за ночь</span><b>${n?rub(T):'Выберите даты'}</b><span>${n?`${n} ${pl(n,'ночь','ночи','ночей')} · ${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`:`до ${f.maxGuests} ${pl(f.maxGuests,'гостя','гостей','гостей')}`+(f.extraBeds?` + ${f.extraBeds} доп. ${pl(f.extraBeds,'место','места','мест')}`:'')}</span><span class="em" aria-hidden="true">${ic(f.icon)}</span></div>
  ${gallery(f,'Фото')}
- ${sec(U.start==null?'Выберите дату заезда':U.end==null?'Выберите дату выезда':fmtD(U.start)+' — '+fmtD(U.end),`<div class="cal">${['пн','вт','ср','чт','пт','сб','вс'].map(d=>`<span class="dw">${d}</span>`).join('')}${c}</div>`)}
+ ${sec(U.start==null?'Выберите дату заезда':U.end==null?'Выберите дату выезда':fmtD(U.start)+' — '+fmtD(U.end),`<div class="cal">${['пн','вт','ср','чт','пт','сб','вс'].map(d=>`<span class="dw">${d}</span>`).join('')}${c}</div>`,'Зачёркнутые даты уже заняты.')}
  ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>${f.maxGuests} ${pl(f.maxGuests,'место','места','мест')}${f.extraBeds?`, можно до ${cap} с доп. местами`:''}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`,
    ex?`${ex} доп. спальн${ex>1?'ых места':'ое место'} · +${rub(A.extraBedPrice||0)} за ночь каждое`:'')}
  ${(A.services||[]).length?sec('Дополнительно',A.services.map(x=>`<label class="cell"><span class="tx"><b>${esc(x.name)}</b><span>${x.price?rub(x.price)+' за проживание':'бесплатно'}</span></span><input class="sw" type="checkbox" data-sv="${esc(x.id)}" ${U.sv[x.id]?'checked':''}></label>`).join('')):''}`,
@@ -512,7 +520,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.cat){U.cat=d.cat;return render()}
  if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
  if(d.flat){U.flat=d.flat;U.start=U.end=null;U.sv={};U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
- if(d.di){const i=+d.di;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else U.end=i;return render()}
+ if(d.di){const i=+d.di,BZ=busyDays(curFlat());if(BZ.has(i))return;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else{let ok=true;for(let j=U.start+1;j<i;j++)if(BZ.has(j))ok=false;if(ok)U.end=i;else{U.start=i;U.end=null}}return render()}
  if(d.g){const f=curFlat();U.guests=Math.max(1,Math.min(f.maxGuests+(f.extraBeds||0),U.guests+ +d.g));return render()}
 });
 document.addEventListener('input',e=>{const t=e.target;
