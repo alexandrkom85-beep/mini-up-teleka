@@ -9,7 +9,11 @@
    • Цены — в рублях, цифрами без пробелов: 1400, а не '1 400 ₽'.
    • id не меняйте — по ним код находит пункты. Для нового пункта
      придумайте новый уникальный id латиницей.
-   • Цвета — в формате '#RRGGBB'. Эмодзи можно вставлять любые.
+   • Цвета — в формате '#RRGGBB'.
+   • Значки (icon): имя файла из папки prototype/icons без .png,
+     например icon: 'house'. Все значки в одном стиле — Fluent Emoji 3D;
+     как добавить новый, написано в prototype/icons/LICENSE-fluent-emoji.txt.
+     Можно вписать и обычный эмодзи: icon: '🏠' — но он будет другого стиля.
    • Куда ведёт кнопка (open): 'repair' — ремонт, 'lunch' — обеды,
      'rent' — аренда, 'build' — дома и бани, 'chat' — чат с владельцем.
 
@@ -32,35 +36,35 @@ window.SHOWCASE = {
 
     // Ряд квадратных кнопок под заголовком
     chips: [
-      { emoji: '🧮', text: 'Расчёт',   open: 'repair', color: '#F5A524' },
-      { emoji: '🛒', text: 'Заказ',    open: 'lunch',  color: '#34C759' },
-      { emoji: '📅', text: 'Бронь',    open: 'rent',   color: '#8B5CF6' },
-      { emoji: '🏗️', text: 'Стройка',  open: 'build',  color: '#F97316' },
-      { emoji: '💬', text: 'Написать', open: 'chat',   color: '#2F6BFF' },
+      { icon: 'triangular_ruler', text: 'Расчёт',   open: 'repair', color: '#F5A524' },
+      { icon: 'shopping_cart', text: 'Заказ',    open: 'lunch',  color: '#34C759' },
+      { icon: 'calendar', text: 'Бронь',    open: 'rent',   color: '#8B5CF6' },
+      { icon: 'building_construction', text: 'Стройка',  open: 'build',  color: '#F97316' },
+      { icon: 'speech_balloon', text: 'Написать', open: 'chat',   color: '#2F6BFF' },
     ],
 
     // Синий баннер — открывает чат
     promo: {
       title: 'Обсудить ваш проект ›',
       text: 'Расскажите о бизнесе — предложим решение и цену',
-      emoji: '💬',
+      icon: 'speech_balloon',
     },
 
     // Плитки. wide: true — широкая (в ряду широкая + узкая), full: true — на всю ширину
     tiles: [
-      { label: 'Демо',      title: 'Ремонт и отделка', text: '',                                       emoji: '🛠️', color: '#F5A524', open: 'repair', wide: true },
-      { label: 'Демо',      title: 'Обеды',            text: '',                                       emoji: '🍱', color: '#22C55E', open: 'lunch' },
-      { label: 'Демо',      title: 'Аренда',           text: '',                                       emoji: '🔑', color: '#8B5CF6', open: 'rent' },
-      { label: 'Демо',      title: 'Дома и бани',      text: 'Проект, комплектация, смета',            emoji: '🏗️', color: '#F97316', open: 'build',  wide: true },
-      { label: 'Под заказ', title: 'Ваш бизнес',       text: 'Запись, расчёты, заказы, бронь, каталог', emoji: '🚀', color: '#EC4899', open: 'chat',   full: true },
+      { label: 'Демо',      title: 'Ремонт и отделка', text: '',                                       icon: 'hammer_and_wrench', color: '#F5A524', open: 'repair', wide: true },
+      { label: 'Демо',      title: 'Обеды',            text: '',                                       icon: 'pot_of_food', color: '#22C55E', open: 'lunch' },
+      { label: 'Демо',      title: 'Аренда',           text: '',                                       icon: 'key', color: '#8B5CF6', open: 'rent' },
+      { label: 'Демо',      title: 'Дома и бани',      text: 'Проект, комплектация, смета',            icon: 'building_construction', color: '#F97316', open: 'build',  wide: true },
+      { label: 'Под заказ', title: 'Ваш бизнес',       text: 'Запись, расчёты, заказы, бронь, каталог', icon: 'rocket', color: '#EC4899', open: 'chat',   full: true },
     ],
 
     benefitsTitle: 'Что получает бизнес',
     benefits: [
-      { emoji: '⏱', color: '#FF9500', title: 'Заявки без звонков',         text: 'Клиент сам выбирает и считает' },
-      { emoji: '✏️', color: '#2481CC', title: 'Своя админка',               text: 'Цены, меню и фото меняете сами' },
-      { emoji: '📱', color: '#8E8E93', title: 'Telegram, MAX и браузер',    text: 'Одно приложение на всех площадках' },
-      { emoji: '🔗', color: '#0A84FF', title: 'Связка с вашими системами',  text: 'CRM, учёт, корпоративные сервисы — по проекту' },
+      { icon: 'stopwatch', color: '#FF9500', title: 'Заявки без звонков',         text: 'Клиент сам выбирает и считает' },
+      { icon: 'pencil', color: '#2481CC', title: 'Своя админка',               text: 'Цены, меню и фото меняете сами' },
+      { icon: 'mobile_phone', color: '#8E8E93', title: 'Telegram, MAX и браузер',    text: 'Одно приложение на всех площадках' },
+      { icon: 'link', color: '#0A84FF', title: 'Связка с вашими системами',  text: 'CRM, учёт, корпоративные сервисы — по проекту' },
     ],
 
     note: 'Это демо. Всё, что вы вводите, никуда не отправляется и не сохраняется.',
@@ -74,12 +78,13 @@ window.SHOWCASE = {
 
     // Виды работ: цена за 1 м². lamps: true — показывать выбор светильников
     works: [
-      { id: 'ceil',  emoji: '💡', name: 'Натяжной потолок', price: 650,  lamps: true },
-      { id: 'paint', emoji: '🎨', name: 'Покраска стен',    price: 380 },
-      { id: 'lam',   emoji: '🪵', name: 'Укладка ламината', price: 450 },
-      { id: 'tile',  emoji: '🧱', name: 'Укладка плитки',   price: 1400 },
+      { id: 'ceil',  icon: 'light_bulb', name: 'Натяжной потолок', price: 650,  lamps: true },
+      { id: 'paint', icon: 'paintbrush', name: 'Покраска стен',    price: 380 },
+      { id: 'lam',   icon: 'wood', name: 'Укладка ламината', price: 450 },
+      { id: 'tile',  icon: 'brick', name: 'Укладка плитки',   price: 1400 },
     ],
 
+    priceIcon: 'house',             // значок в карточке «Предварительная цена»
     lampPrice: 450,                 // точечный светильник, ₽ за штуку
     lampsStart: 6,                  // сколько светильников выбрано сразу
     demolitionPrice: 150,           // демонтаж старого, ₽ за м²
@@ -107,15 +112,15 @@ window.SHOWCASE = {
 
     // Меню. category — вкладка; available: false — «Закончилось»
     menu: [
-      { id: 'm1', category: 'Комплексы', emoji: '🍱', name: 'Комплекс «Рабочий»', price: 390, available: true },
-      { id: 'm2', category: 'Комплексы', emoji: '🥗', name: 'Комплекс «Лёгкий»',  price: 320, available: true },
-      { id: 'm3', category: 'Супы',      emoji: '🍲', name: 'Борщ',               price: 160, available: true },
-      { id: 'm4', category: 'Супы',      emoji: '🥣', name: 'Солянка',            price: 190, available: true },
-      { id: 'm5', category: 'Горячее',   emoji: '🍖', name: 'Котлета с пюре',     price: 230, available: true },
-      { id: 'm6', category: 'Горячее',   emoji: '🍛', name: 'Плов',               price: 260, available: false },
-      { id: 'm7', category: 'Горячее',   emoji: '🍝', name: 'Паста с курицей',    price: 250, available: true },
-      { id: 'm8', category: 'Салаты',    emoji: '🥗', name: 'Цезарь',             price: 240, available: true },
-      { id: 'm9', category: 'Напитки',   emoji: '🧃', name: 'Морс',               price: 70,  available: true },
+      { id: 'm1', category: 'Комплексы', icon: 'plate', name: 'Комплекс «Рабочий»', price: 390, available: true },
+      { id: 'm2', category: 'Комплексы', icon: 'green_salad', name: 'Комплекс «Лёгкий»',  price: 320, available: true },
+      { id: 'm3', category: 'Супы',      icon: 'pot_of_food', name: 'Борщ',               price: 160, available: true },
+      { id: 'm4', category: 'Супы',      icon: 'bowl_with_spoon', name: 'Солянка',            price: 190, available: true },
+      { id: 'm5', category: 'Горячее',   icon: 'meat_on_bone', name: 'Котлета с пюре',     price: 230, available: true },
+      { id: 'm6', category: 'Горячее',   icon: 'curry_rice', name: 'Плов',               price: 260, available: false },
+      { id: 'm7', category: 'Горячее',   icon: 'spaghetti', name: 'Паста с курицей',    price: 250, available: true },
+      { id: 'm8', category: 'Салаты',    icon: 'green_salad', name: 'Цезарь',             price: 240, available: true },
+      { id: 'm9', category: 'Напитки',   icon: 'beverage_box', name: 'Морс',               price: 70,  available: true },
     ],
 
     doneTitle: 'Заказ принят',
@@ -130,9 +135,9 @@ window.SHOWCASE = {
     // price — ₽ за ночь; maxGuests — максимум гостей; show: false — скрыть
     // color1/color2 — градиент обложки вместо фото
     flats: [
-      { id: 'f1', emoji: '🛋️', name: 'Студия у набережной', address: 'Центр · 7 мин до метро',    maxGuests: 2, price: 3200, show: true, color1: '#12463E', color2: '#2F9C84' },
-      { id: 'f2', emoji: '🏡', name: 'Двушка для семьи',    address: 'Спальный район · парковка', maxGuests: 4, price: 4600, show: true, color1: '#4A2E14', color2: '#B9803F' },
-      { id: 'f3', emoji: '🌆', name: 'Лофт с видом',        address: 'Деловой квартал · 18 этаж', maxGuests: 3, price: 5900, show: true, color1: '#1C2550', color2: '#5167C9' },
+      { id: 'f1', icon: 'couch_and_lamp', name: 'Студия у набережной', address: 'Центр · 7 мин до метро',    maxGuests: 2, price: 3200, show: true, color1: '#12463E', color2: '#2F9C84' },
+      { id: 'f2', icon: 'bed', name: 'Двушка для семьи',    address: 'Спальный район · парковка', maxGuests: 4, price: 4600, show: true, color1: '#4A2E14', color2: '#B9803F' },
+      { id: 'f3', icon: 'cityscape_at_dusk', name: 'Лофт с видом',        address: 'Деловой квартал · 18 этаж', maxGuests: 3, price: 5900, show: true, color1: '#1C2550', color2: '#5167C9' },
     ],
 
     bookingNote: 'Хозяин подтвердит даты и пришлёт реквизиты для предоплаты.',
@@ -149,16 +154,16 @@ window.SHOWCASE = {
     // Проекты. area — площадь, м² (на неё умножается цена комплектации)
     // show: false — скрыть; color1/color2 — градиент обложки вместо фото
     houses: [
-      { id: 'h1', emoji: '🛖', name: 'Баня 6×4',            info: 'Брус · парная, мойка, комната отдыха', area: 36,  show: true, color1: '#3B2414', color2: '#A86B3C' },
-      { id: 'h2', emoji: '🏡', name: 'Каркасный дом 98 м²', info: '1 этаж · 3 спальни · терраса',         area: 98,  show: true, color1: '#173A2A', color2: '#4E9B6F' },
-      { id: 'h3', emoji: '🏠', name: 'Дом из бруса 140 м²', info: '2 этажа · 4 спальни · котельная',      area: 140, show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'h1', icon: 'hut', name: 'Баня 6×4',            info: 'Брус · парная, мойка, комната отдыха', area: 36,  show: true, color1: '#3B2414', color2: '#A86B3C' },
+      { id: 'h2', icon: 'house_with_garden', name: 'Каркасный дом 98 м²', info: '1 этаж · 3 спальни · терраса',         area: 98,  show: true, color1: '#173A2A', color2: '#4E9B6F' },
+      { id: 'h3', icon: 'house', name: 'Дом из бруса 140 м²', info: '2 этажа · 4 спальни · котельная',      area: 140, show: true, color1: '#2A2340', color2: '#7A68C4' },
     ],
 
     // Комплектации: цена за 1 м² площади проекта; months — срок стройки
     packages: [
-      { id: 'box',  emoji: '🧱', name: 'Коробка',       pricePerM2: 22000, months: 2 },
-      { id: 'warm', emoji: '🔥', name: 'Тёплый контур', pricePerM2: 32000, months: 3 },
-      { id: 'key',  emoji: '🔑', name: 'Под ключ',      pricePerM2: 48000, months: 5 },
+      { id: 'box',  icon: 'brick', name: 'Коробка',       pricePerM2: 22000, months: 2 },
+      { id: 'warm', icon: 'fire', name: 'Тёплый контур', pricePerM2: 32000, months: 3 },
+      { id: 'key',  icon: 'key', name: 'Под ключ',      pricePerM2: 48000, months: 5 },
     ],
     packageStart: 'warm',           // какая комплектация выбрана сразу
 

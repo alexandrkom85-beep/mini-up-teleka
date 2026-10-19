@@ -1,0 +1,4 @@
+Значки: Microsoft Fluent Emoji (3D), https://github.com/microsoft/fluentui-emoji
+Лицензия MIT, Copyright (c) Microsoft Corporation. Уменьшены до 160 px.
+Новый значок: найти в репозитории папку assets/<Название>/3D/, скачать PNG,
+положить сюда под именем латиницей (например, house.png) и указать в data.js: icon: 'house'.

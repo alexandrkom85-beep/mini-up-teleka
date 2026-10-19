@@ -3,7 +3,7 @@
 <title>Витрина мини-приложений</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: dark "premium" Telegram Mini App — Telegram header, bento tiles with gradient glow + big emoji, chip row, blue MainButton. Always dark (ref: design/refs/01) */
+/* Layout: dark "premium" Telegram Mini App — Telegram header, bento tiles with gradient glow + Fluent Emoji 3D icons (prototype/icons), chip row, blue MainButton. Always dark (ref: design/refs/01) */
 :root{
   --page:#0B0D12; --cell:#171A21; --cell2:#1E222B; --head:#0B0D12;
   --text:#FFFFFF; --hint:#8B90A0; --link:#5B9BFF;
@@ -31,12 +31,12 @@ h1,h2,p{margin:0}
 .tgh .r i{width:26px;height:26px;border:1.5px solid var(--text);border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;letter-spacing:1px;line-height:1}
 .tgh .c{text-align:center;min-width:0}
 .tgh .c b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tgh .c span{font-size:12px;color:var(--hint)}
+.tgh .c span{display:block;font-size:12px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .in-tg .tgh{display:none}
 
 /* home: brand row, chips, promo, bento */
 .top{display:flex;align-items:center;gap:12px;padding:16px 16px 0}
-.logo{width:44px;height:44px;border-radius:14px;flex:none;background:linear-gradient(145deg,#FFD66B,#F59E0B);display:grid;place-items:center;font-size:24px;box-shadow:0 6px 18px -6px #F59E0B99}
+.logo{width:44px;height:44px;border-radius:14px;flex:none;background:linear-gradient(145deg,#2A3350,#1A2036);border:1px solid var(--line);display:grid;place-items:center;font-size:28px;box-shadow:0 6px 18px -6px #F59E0B99}
 .top-t{min-width:0}
 .top-t b{display:block;font-size:17px;font-weight:600;text-wrap:balance}
 .top-t span{font-size:13px;color:var(--hint)}
@@ -74,7 +74,7 @@ h1,h2,p{margin:0}
 .cell{display:flex;align-items:center;gap:12px;min-height:50px;padding:10px 16px;width:100%;text-align:left;position:relative}
 .cell + .cell::before{content:"";position:absolute;top:0;right:0;left:16px;border-top:1px solid var(--sep)}
 .cell.ic + .cell::before,.cell.ic + .cell.ic::before{left:62px}
-.cell .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:19px;flex:none;color:#fff;box-shadow:inset 0 1px 0 rgb(255 255 255 / .2)}
+.cell .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:24px;flex:none;color:#fff;box-shadow:inset 0 1px 0 rgb(255 255 255 / .2)}
 .cell .tx{flex:1;min-width:0}
 .cell .tx b{font-weight:500;display:block}
 .cell .tx span{display:block;font-size:14px;color:var(--hint);margin-top:1px}
@@ -101,6 +101,11 @@ h1,h2,p{margin:0}
 .opt[aria-pressed="true"]{border-color:var(--btn);background:linear-gradient(160deg,#1B2D5C,#171A21)}
 .opt[aria-pressed="true"] .ck{background:var(--btn);border-color:var(--btn)}
 .opt[aria-pressed="true"] .ck::after{content:"✓"}
+img.ic3d{width:1em;height:1em;display:block;object-fit:contain}
+.numin{width:76px;text-align:right;border:0;background:var(--cell2);border-radius:10px;padding:8px 10px;font-variant-numeric:tabular-nums;font-weight:600;outline:none;font-size:16px}
+.numin:focus{box-shadow:0 0 0 2px var(--btn)}
+.num{display:flex;align-items:center;gap:6px;color:var(--hint)}
+.dims .numin{width:64px}.dims .x{color:var(--hint)}
 .opts.three{grid-template-columns:repeat(3,1fr);gap:8px}
 .opts.three .opt{padding:12px 10px}.opts.three .opt b{font-size:14px}.opts.three .opt .ck{top:10px;right:10px;width:20px;height:20px}
 .sum span + b + span{display:block;margin-top:4px}
@@ -194,35 +199,40 @@ function go(s){if(U.scr!==s)U.stack.push(U.scr);U.scr=s;U.err='';render();window
 function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,0)}
 function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
 function finish(h,p){U.done={h,p};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
+// значок: имя файла из icons/ → картинка; иначе — текст (эмодзи)
+const ic=v=>/^[a-z0-9_]+$/.test(v||'')?`<img class="ic3d" src="icons/${v}.png" alt="" decoding="async">`:esc(v||'');
+const fmtA=a=>(+a).toLocaleString('ru-RU',{maximumFractionDigits:1});
 const target=o=>o==='chat'?'data-act="chat"':`data-go="${esc(o)}"`;
 
 const sec=(h,inner,f)=>`<div class="sec">${h?`<div class="sec-h">${h}</div>`:''}<div class="grp">${inner}</div>${f?`<div class="sec-f">${f}</div>`:''}</div>`;
 const cell=({ico,col,t,s,val,chev,go:g,act,cls=''})=>`<${g||act?'button':'div'} class="cell ${ico?'ic':''} ${cls}" ${g?`data-go="${g}"`:''} ${act||''}>
-  ${ico?`<span class="ico" style="background:${col}">${ico}</span>`:''}<span class="tx"><b>${t}</b>${s?`<span>${s}</span>`:''}</span>${val!=null?`<span class="val">${val}</span>`:''}${chev?'<span class="chev">›</span>':''}</${g||act?'button':'div'}>`;
+  ${ico?`<span class="ico" style="background:${col}2E">${ico}</span>`:''}<span class="tx"><b>${t}</b>${s?`<span>${s}</span>`:''}</span>${val!=null?`<span class="val">${val}</span>`:''}${chev?'<span class="chev">›</span>':''}</${g||act?'button':'div'}>`;
 
 /* ---------- screens: each returns {title, sub, html, main:{text,fn,disabled}} ---------- */
 const scr={};
 const tile=x=>`<button class="tile ${x.full?'full':x.wide?'w':''}" style="--g:${esc(x.color)}66" ${target(x.open)}>
-  <span class="k">${esc(x.label)}</span><b>${esc(x.title)}</b>${x.text?`<span class="d">${esc(x.text)}</span>`:''}<span class="em" aria-hidden="true">${esc(x.emoji)}</span></button>`;
+  <span class="k">${esc(x.label)}</span><b>${esc(x.title)}</b>${x.text?`<span class="d">${esc(x.text)}</span>`:''}<span class="em" aria-hidden="true">${ic(x.icon)}</span></button>`;
 scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
- <div class="top"><div class="logo" aria-hidden="true">🧩</div><div class="top-t"><b>${esc(H.heading)}</b><span>${esc(H.tagline)}</span></div></div>
+ <div class="top"><div class="logo" aria-hidden="true">${ic('puzzle_piece')}</div><div class="top-t"><b>${esc(H.heading)}</b><span>${esc(H.tagline)}</span></div></div>
  <div class="chips">
   <span class="live" aria-hidden="true"><b>Live</b><i></i></span>
-  ${H.chips.map(c=>`<button class="chip" ${target(c.open)} style="--c:${esc(c.color)}"><span aria-hidden="true">${esc(c.emoji)}</span>${esc(c.text)}</button>`).join('')}
+  ${H.chips.map(c=>`<button class="chip" ${target(c.open)} style="--c:${esc(c.color)}"><span aria-hidden="true">${ic(c.icon)}</span>${esc(c.text)}</button>`).join('')}
  </div>
- <button class="promo" data-act="chat"><span class="tx"><b>${esc(H.promo.title)}</b><span>${esc(H.promo.text)}</span></span><span class="promo-ic" aria-hidden="true">${esc(H.promo.emoji)}</span></button>
+ <button class="promo" data-act="chat"><span class="tx"><b>${esc(H.promo.title)}</b><span>${esc(H.promo.text)}</span></span><span class="promo-ic" aria-hidden="true">${ic(H.promo.icon)}</span></button>
  <div class="bento">${H.tiles.map(tile).join('')}</div>
- ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:esc(b.emoji),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
+ ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:ic(b.icon),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
  <div class="note">${esc(H.note)}</div>`,
  main:{text:H.button,fn:openChat}}};
 
+const clampA=a=>Math.min(R.areaMax,Math.max(R.areaMin,a));
 const curWork=()=>R.works.find(x=>x.id===U.rep.work)||R.works[0];
 function repTotal(){const u=U.rep,w=curWork();let t=w.price*u.area;if(w.lamps)t+=u.lamps*R.lampPrice;if(u.demont)t+=R.demolitionPrice*u.area;if(u.rough)t+=R.materialsPrice*u.area;return{t,w}}
 scr.repair=()=>{const u=U.rep,{t,w}=repTotal();return{title:R.title,sub:R.subtitle,html:`
- <div class="sum"><span>Предварительная цена</span><b id="sumV">от ${rub(t)}</b><span class="em" aria-hidden="true">🧮</span></div>
- <div class="sec"><div class="sec-h">Вид работ</div><div class="opts">${R.works.map(x=>`<button class="opt" data-rw="${esc(x.id)}" aria-pressed="${w.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${esc(x.emoji||'🔨')}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.price)}/м²</span></button>`).join('')}</div></div>
- ${sec('Площадь',`<div class="cell"><span class="tx"><b>Площадь помещения</b></span><span class="val" id="areaV" style="color:var(--text);font-weight:600">${u.area} м²</span></div>
-   <div class="cell" style="padding-top:0"><input id="area" type="range" min="${R.areaMin}" max="${R.areaMax}" value="${u.area}" aria-label="Площадь"></div>`)}
+ <div class="sum"><span>Предварительная цена</span><b id="sumV">от ${rub(t)}</b><span class="em" aria-hidden="true">${ic(R.priceIcon||'house')}</span></div>
+ <div class="sec"><div class="sec-h">Вид работ</div><div class="opts">${R.works.map(x=>`<button class="opt" data-rw="${esc(x.id)}" aria-pressed="${w.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${ic(x.icon)}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.price)}/м²</span></button>`).join('')}</div></div>
+ ${sec('Площадь',`<div class="cell"><span class="tx"><b>Площадь помещения</b></span><span class="num"><input class="numin" id="areaN" type="text" inputmode="decimal" value="${fmtA(u.area)}" aria-label="Площадь, м²"><span>м²</span></span></div>
+   <div class="cell" style="padding-top:0"><input id="area" type="range" min="${R.areaMin}" max="${R.areaMax}" value="${clampA(u.area)}" aria-label="Площадь, ползунок"></div>
+   <div class="cell dims"><span class="tx"><b>По размерам</b><span>длина × ширина, м</span></span><input class="numin" id="dimL" type="text" inputmode="decimal" placeholder="0" value="${esc(u.L||'')}" aria-label="Длина, м"><span class="x">×</span><input class="numin" id="dimW" type="text" inputmode="decimal" placeholder="0" value="${esc(u.W||'')}" aria-label="Ширина, м"></div>`)}
  ${sec('Дополнительно',
    (w.lamps?`<div class="cell"><span class="tx"><b>Точечные светильники</b><span>${rub(R.lampPrice)} за шт.</span></span><span class="stp"><button data-lamp="-1" aria-label="Меньше">−</button><span>${u.lamps}</span><button data-lamp="1" aria-label="Больше">+</button></span></div>`:'')+
    `<label class="cell"><span class="tx"><b>Демонтаж старого</b><span>${rub(R.demolitionPrice)} за м²</span></span><input class="sw" type="checkbox" id="demont" ${u.demont?'checked':''}></label>
@@ -230,7 +240,7 @@ scr.repair=()=>{const u=U.rep,{t,w}=repTotal();return{title:R.title,sub:R.subtit
    esc(R.note))}`,
  main:{text:R.button+' · от '+rub(t),fn:()=>go('repairForm')}}};
 scr.repairForm=()=>{const{t,w}=repTotal();return{title:R.formTitle,sub:R.title,html:`
- ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+U.rep.area+' м²',val:'от '+rub(t)}))}
+ ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+fmtA(U.rep.area)+' м²',val:'от '+rub(t)}))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район" autocomplete="off"></div>`,esc(D.formNote))}
@@ -245,12 +255,12 @@ scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!c
  <div class="segc">${['Сегодня','Завтра'].map((d,i)=>`<button data-day="${i}" aria-pressed="${U.day===i}">${d}, ${dayL(i)}</button>`).join('')}</div>
  <div class="segc cats">${cats.map(c=>`<button data-cat="${esc(c)}" aria-pressed="${U.cat===c}">${esc(c)}</button>`).join('')}</div>
  <div class="food">${L.menu.filter(m=>U.cat==='Все'||m.category===U.cat).map(m=>{const q=U.cart[m.id]||0,id=esc(m.id);return`<div class="fi ${m.available?'':'off'}">
-   ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${esc(m.emoji||'🍽')}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
+   ${q?`<span class="badge">${q}</span>`:''}<div class="em" aria-hidden="true">${ic(m.icon)}</div><div class="nm">${esc(m.name)}</div><div class="pr">${rub(m.price)}</div>
    ${!m.available?'<div class="pr">Закончилось</div>':q?`<div class="pm"><button class="mi" data-add="${id}" data-d="-1" aria-label="Убрать">−</button><button class="pl" data-add="${id}" data-d="1" aria-label="Добавить">+</button></div>`:`<button class="add" data-add="${id}" data-d="1">Добавить</button>`}</div>`}).join('')}</div>
  <div class="note">${esc(L.note)}</div>`,
  main:n?{text:`Посмотреть заказ · ${rub(s)}`,fn:()=>go('lunchForm')}:{text:'Выберите блюда',disabled:true}}};
 scr.lunchForm=()=>{const{s}=cartSum();return{title:'Ваш заказ',sub:L.title,html:`
- ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=dish(id);return m&&m.available?`<div class="cell"><span style="font-size:26px">${esc(m.emoji)}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
+ ${sec('Заказ · '+['сегодня','завтра'][U.day],Object.keys(U.cart).map(id=>{const m=dish(id);return m&&m.available?`<div class="cell"><span style="font-size:28px">${ic(m.icon)}</span><span class="tx"><b>${esc(m.name)}</b><span>${U.cart[id]} × ${rub(m.price)}</span></span><span class="price">${rub(m.price*U.cart[id])}</span></div>`:''}).join('')+
    `<div class="cell"><span class="tx"><b><strong>Итого</strong></b></span><span class="price">${rub(s)}</span></div>`)}
  <div class="sec-h" style="margin:24px 16px 0">Время доставки</div>
  <div class="segc" style="margin-top:0">${L.slots.map(t=>`<button data-slot="${esc(t)}" aria-pressed="${U.slot===t}">${esc(t)}</button>`).join('')}</div>
@@ -259,7 +269,7 @@ scr.lunchForm=()=>{const{s}=cartSum();return{title:'Ваш заказ',sub:L.tit
  main:{text:'Заказать · '+rub(s),fn:()=>{if(!val('la').trim())return fail('Укажите адрес');if(!phoneOk(val('lp')))return fail('Проверьте телефон: нужно 10–11 цифр');
    finish(L.doneTitle,`Привезём ${['сегодня','завтра'][U.day]} к ${U.slot}. Столовая уже видит заказ.`)}}}};
 
-const flatPh=(f,tag)=>`<div class="ph" style="background:linear-gradient(160deg,${esc(f.color1)},${esc(f.color2)})"><span class="em" aria-hidden="true">${esc(f.emoji||'🏠')}</span><span class="tag">${tag}</span></div>`;
+const flatPh=(f,tag)=>`<div class="ph" style="background:linear-gradient(160deg,${esc(f.color1)},${esc(f.color2)})"><span class="em" aria-hidden="true">${ic(f.icon)}</span><span class="tag">${tag}</span></div>`;
 scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f=>`<div class="sec"><button class="grp" data-flat="${esc(f.id)}" style="display:block;width:100%;text-align:left">
    ${flatPh(f,'до '+f.maxGuests+' '+pl(f.maxGuests,'гостя','гостей','гостей'))}
    <div class="cell"><span class="tx"><b style="font-weight:600">${esc(f.name)}</b><span>${esc(f.address)}</span></span><span class="price">${rub(f.price)}<span style="color:var(--hint);font-weight:400"> /ночь</span></span></div></button></div>`).join('')+
@@ -290,8 +300,8 @@ scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map
    <div class="cell"><span class="tx"><b style="font-weight:600">${esc(h.name)}</b><span>${esc(h.info)}</span></span><span class="price">от ${rub(h.area*Math.min(...B.packages.map(p=>p.pricePerM2)))}</span></div></button></div>`).join('')+
    `<div class="note">${esc(B.note)}</div>`,main:{text:'Выберите проект',disabled:true}});
 scr.house=()=>{const{t,h,p}=bldTotal();return{title:h.name,sub:h.info,html:`
- <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span>Срок строительства — около ${p.months} ${pl(p.months,'месяца','месяцев','месяцев')}</span><span class="em" aria-hidden="true">${esc(h.emoji||'🏠')}</span></div>
- <div class="sec"><div class="sec-h">Комплектация</div><div class="opts three">${B.packages.map(x=>`<button class="opt" data-pack="${esc(x.id)}" aria-pressed="${p.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${esc(x.emoji||'🏠')}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.pricePerM2)}/м²</span></button>`).join('')}</div></div>
+ <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span>Срок строительства — около ${p.months} ${pl(p.months,'месяца','месяцев','месяцев')}</span><span class="em" aria-hidden="true">${ic(h.icon)}</span></div>
+ <div class="sec"><div class="sec-h">Комплектация</div><div class="opts three">${B.packages.map(x=>`<button class="opt" data-pack="${esc(x.id)}" aria-pressed="${p.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${ic(x.icon)}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.pricePerM2)}/м²</span></button>`).join('')}</div></div>
  ${sec('Дополнительно',B.extras.map(x=>`<label class="cell"><span class="tx"><b>${esc(x.name)}</b><span>${esc(x.text)} · ${rub(x.price)}</span></span><input class="sw" type="checkbox" data-ex="${esc(x.id)}" ${U.bld.ex[x.id]?'checked':''}></label>`).join(''),esc(B.priceNote))}`,
  main:{text:B.button+' · от '+rub(t),fn:()=>go('buildForm')}}};
 scr.buildForm=()=>{const{t,h,p}=bldTotal();return{title:B.formTitle,sub:B.title,html:`
@@ -345,7 +355,12 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.g){U.guests=Math.max(1,Math.min(curFlat().maxGuests,U.guests+ +d.g));return render()}
 });
 document.addEventListener('input',e=>{const t=e.target;
- if(t.id==='area'){U.rep.area=+t.value;$('areaV').textContent=t.value+' м²';repLive();curMain=scr.repair().main}
+ // площадь: ползунок, ввод числом или длина × ширина — всё синхронно
+ if(t.id==='area'||t.id==='areaN'||t.id==='dimL'||t.id==='dimW'){const u=U.rep,num=x=>parseFloat(String(x).replace(',','.'));
+  if(t.id==='area'){u.area=+t.value;u.L=u.W='';$('areaN').value=fmtA(u.area);$('dimL').value=$('dimW').value=''}
+  else if(t.id==='areaN'){const v=num(t.value);if(!(v>0))return;u.area=Math.min(1000,Math.round(v*10)/10);u.L=u.W='';$('area').value=clampA(u.area);$('dimL').value=$('dimW').value=''}
+  else{u.L=$('dimL').value;u.W=$('dimW').value;const a=num(u.L)*num(u.W);if(!(a>0))return;u.area=Math.min(1000,Math.round(a*10)/10);$('areaN').value=fmtA(u.area);$('area').value=clampA(u.area)}
+  repLive();curMain=scr.repair().main}
 });
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
