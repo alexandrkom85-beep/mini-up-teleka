@@ -11,8 +11,8 @@
      придумайте новый уникальный id латиницей.
    • Цвета — в формате '#RRGGBB'.
    • Значки (icon): имя файла из папки prototype/icons без .png,
-     например icon: 'house'. Все значки в одном стиле — Fluent Emoji 3D;
-     как добавить новый, написано в prototype/icons/LICENSE-fluent-emoji.txt.
+     например icon: 'house'. Значки и блюда — генерация владельца (ChatGPT, фон убран,
+     листы — design/refs/02 и 04); speech_balloon, wood и др. — Fluent Emoji 3D (LICENSE-fluent-emoji.txt).
      Можно вписать и обычный эмодзи: icon: '🏠' — но он будет другого стиля.
    • Куда ведёт кнопка (open): 'repair' — ремонт, 'lunch' — обеды,
      'rent' — аренда, 'build' — дома и бани, 'chat' — чат с владельцем.
@@ -64,8 +64,8 @@ window.SHOWCASE = {
     works: [
       { id: 'ceil',  icon: 'light_bulb', name: 'Натяжной потолок', price: 650,  lamps: true },
       { id: 'paint', icon: 'paintbrush', name: 'Покраска стен',    price: 380 },
-      { id: 'lam',   icon: 'wood', name: 'Укладка ламината', price: 450 },
-      { id: 'tile',  icon: 'brick', name: 'Укладка плитки',   price: 1400 },
+      { id: 'lam',   icon: 'laminate', name: 'Укладка ламината', price: 450 },
+      { id: 'tile',  icon: 'tile', name: 'Укладка плитки',   price: 1400 },
     ],
 
     priceIcon: 'house',             // значок в карточке «Предварительная цена»
@@ -159,13 +159,13 @@ window.SHOWCASE = {
     houses: [
       { id: 'h1', icon: 'hut', name: 'Баня 6×4',            info: 'Брус · парная, мойка, комната отдыха', area: 36,  show: true, color1: '#3B2414', color2: '#A86B3C' },
       { id: 'h2', icon: 'house_with_garden', name: 'Каркасный дом 98 м²', info: '1 этаж · 3 спальни · терраса',         area: 98,  show: true, color1: '#173A2A', color2: '#4E9B6F' },
-      { id: 'h3', icon: 'house', name: 'Дом из бруса 140 м²', info: '2 этажа · 4 спальни · котельная',      area: 140, show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'h3', icon: 'house_timber', name: 'Дом из бруса 140 м²', info: '2 этажа · 4 спальни · котельная',      area: 140, show: true, color1: '#2A2340', color2: '#7A68C4' },
     ],
 
     // Комплектации: цена за 1 м² площади проекта; months — срок стройки
     packages: [
       { id: 'box',  icon: 'brick', name: 'Коробка',       pricePerM2: 22000, months: 2 },
-      { id: 'warm', icon: 'fire', name: 'Тёплый контур', pricePerM2: 32000, months: 3 },
+      { id: 'warm', icon: 'insulation', name: 'Тёплый контур', pricePerM2: 32000, months: 3 },
       { id: 'key',  icon: 'key', name: 'Под ключ',      pricePerM2: 48000, months: 5 },
     ],
     packageStart: 'warm',           // какая комплектация выбрана сразу
