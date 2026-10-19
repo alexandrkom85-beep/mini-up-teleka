@@ -38,7 +38,7 @@ function validate(d) {
   (function walk(o, path) {
     if (bad || !o || typeof o !== 'object') return;
     for (const [k, v] of Object.entries(o)) {
-      if (/^(price|pricePerM2|lampPrice|demolitionPrice|materialsPrice|area|areaMin|areaMax|areaStart|lampsStart|months|maxGuests|terracePricePerM2)$/.test(k) && !(typeof v === 'number' && isFinite(v) && v >= 0)) { bad = `${path}${k}: нужно число не меньше 0`; return; }
+      if (/^(price|pricePerM2|lampPrice|demolitionPrice|materialsPrice|area|areaMin|areaMax|areaStart|lampsStart|months|maxGuests|extraBeds|extraBedPrice|terracePricePerM2)$/.test(k) && !(typeof v === 'number' && isFinite(v) && v >= 0)) { bad = `${path}${k}: нужно число не меньше 0`; return; }
       walk(v, `${path}${k}.`);
     }
   })(d, '');

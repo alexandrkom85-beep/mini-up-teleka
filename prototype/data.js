@@ -135,12 +135,31 @@ window.SHOWCASE = {
     subtitle: 'демо',
     note: 'В рабочей версии здесь будут настоящие фото.',
 
-    // price — ₽ за ночь; maxGuests — максимум гостей; show: false — скрыть
-    // color1/color2 — градиент обложки вместо фото
+    // price — ₽ за ночь; maxGuests — основных спальных мест; extraBeds — сколько можно добавить
+    // доп. мест (гостей сверх maxGuests); show: false — скрыть; color1/color2 — обложка;
+    // gallery — фото квартиры: img — файл из prototype/photos (4:3), пока пусто — заглушка
     flats: [
-      { id: 'f1', icon: 'couch_and_lamp', name: 'Студия у набережной', address: 'Центр · 7 мин до метро',    maxGuests: 2, price: 3200, show: true, color1: '#12463E', color2: '#2F9C84' },
-      { id: 'f2', icon: 'bed', name: 'Двушка для семьи',    address: 'Спальный район · парковка', maxGuests: 4, price: 4600, show: true, color1: '#4A2E14', color2: '#B9803F' },
-      { id: 'f3', icon: 'cityscape_at_dusk', name: 'Лофт с видом',        address: 'Деловой квартал · 18 этаж', maxGuests: 3, price: 5900, show: true, color1: '#1C2550', color2: '#5167C9' },
+      { id: 'f1', icon: 'couch_and_lamp', name: 'Студия у набережной', address: 'Центр · 7 мин до метро',    maxGuests: 2, extraBeds: 1, price: 3200, show: true, color1: '#12463E', color2: '#2F9C84',
+        gallery: [{ img: '', caption: 'Комната' }, { img: '', caption: 'Кухня' }, { img: '', caption: 'Вид из окна' }] },
+      { id: 'f2', icon: 'bed', name: 'Двушка для семьи',    address: 'Спальный район · парковка', maxGuests: 4, extraBeds: 2, price: 4600, show: true, color1: '#4A2E14', color2: '#B9803F',
+        gallery: [{ img: '', caption: 'Спальня' }, { img: '', caption: 'Детская' }, { img: '', caption: 'Кухня-гостиная' }] },
+      { id: 'f3', icon: 'cityscape_at_dusk', name: 'Лофт с видом',        address: 'Деловой квартал · 18 этаж', maxGuests: 3, extraBeds: 1, price: 5900, show: true, color1: '#1C2550', color2: '#5167C9',
+        gallery: [{ img: '', caption: 'Гостиная' }, { img: '', caption: 'Панорамное окно' }, { img: '', caption: 'Спальня' }] },
+      { id: 'f4', icon: 'bed', name: 'Однушка у вокзала',   address: 'Вокзал · 5 мин пешком',     maxGuests: 2, extraBeds: 1, price: 2800, show: true, color1: '#3A1C2E', color2: '#A3507E',
+        gallery: [{ img: '', caption: 'Комната' }, { img: '', caption: 'Санузел' }] },
+      { id: 'f5', icon: 'couch_and_lamp', name: 'Трёшка для компании', address: 'Центр · 2 спальни и гостиная', maxGuests: 6, extraBeds: 2, price: 6900, show: true, color1: '#1E3A4A', color2: '#3F8BB0',
+        gallery: [{ img: '', caption: 'Гостиная' }, { img: '', caption: 'Спальня 1' }, { img: '', caption: 'Спальня 2' }] },
+    ],
+
+    // Гость сверх основных мест — доп. спальное место, ₽ за ночь
+    extraBedPrice: 500,
+
+    // Доп. услуги — переключатели, цена за всё проживание (0 — бесплатно)
+    services: [
+      { id: 'linen',  name: 'Дополнительный комплект белья', price: 300 },
+      { id: 'towels', name: 'Дополнительные полотенца',      price: 200 },
+      { id: 'crib',   name: 'Детская кроватка',              price: 0 },
+      { id: 'late',   name: 'Поздний выезд до 16:00',        price: 1000 },
     ],
 
     bookingNote: 'Хозяин подтвердит даты и пришлёт реквизиты для предоплаты.',

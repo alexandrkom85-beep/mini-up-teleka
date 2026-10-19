@@ -206,7 +206,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 let R=D.repair,L=D.lunch,A=D.rent,B=D.build;
 const clone=o=>JSON.parse(JSON.stringify(o));
 let IS_OWNER=false;
-const U={bld:{house:null,ex:{},opt:{},terr:0,w:0,l:0},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',
+const U={bld:{house:null,ex:{},opt:{},terr:0,w:0,l:0},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',sv:{},
   flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
@@ -335,17 +335,24 @@ scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f
    `<div class="note">${esc(A.note)}</div>`,main:{text:'Выберите квартиру',disabled:true}});
 const nights=()=>U.start!=null&&U.end!=null?U.end-U.start:0;
 const curFlat=()=>A.flats.find(x=>x.id===U.flat);
+// Аренда: гости сверх основных мест — доп. спальные места (за ночь), доп. услуги — за проживание
+const extraGuests=()=>Math.max(0,U.guests-curFlat().maxGuests);
+function rentTotal(){const f=curFlat(),n=nights();let t=n*(f.price+extraGuests()*(A.extraBedPrice||0));(A.services||[]).forEach(x=>{if(U.sv[x.id])t+=x.price});return t}
+const rentSummary=()=>[`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,extraGuests()?`доп. мест: ${extraGuests()}`:'',...(A.services||[]).filter(x=>U.sv[x.id]).map(x=>x.name.toLowerCase())].filter(Boolean).join(' · ');
 scr.flat=()=>{const f=curFlat();const t0=new Date();t0.setHours(0,0,0,0);const off=(t0.getDay()+6)%7;let c='';
  for(let i=0;i<off;i++)c+='<span></span>';
  for(let i=0;i<28;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const k=(U.start===i||U.end===i)?'edge':(U.start!=null&&U.end!=null&&i>U.start&&i<U.end)?'in':'';
   c+=`<button class="${k}" data-di="${i}" aria-label="${d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}">${d.getDate()}</button>`}
- const n=nights();return{title:f.name,sub:f.address,html:`
- <div class="sec"><div class="grp">${flatPh(f,rub(f.price)+' за ночь')}</div></div>
+ const n=nights(),T=rentTotal(),ex=extraGuests(),cap=f.maxGuests+(f.extraBeds||0);return{title:f.name,sub:f.address,html:`
+ <div class="sum"><span>${rub(f.price)} за ночь</span><b>${n?rub(T):'Выберите даты'}</b><span>${n?`${n} ${pl(n,'ночь','ночи','ночей')} · ${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`:`до ${f.maxGuests} ${pl(f.maxGuests,'гостя','гостей','гостей')}`+(f.extraBeds?` + ${f.extraBeds} доп. ${pl(f.extraBeds,'место','места','мест')}`:'')}</span><span class="em" aria-hidden="true">${ic(f.icon)}</span></div>
+ ${gallery(f,'Фото')}
  ${sec(U.start==null?'Выберите дату заезда':U.end==null?'Выберите дату выезда':fmtD(U.start)+' — '+fmtD(U.end),`<div class="cal">${['пн','вт','ср','чт','пт','сб','вс'].map(d=>`<span class="dw">${d}</span>`).join('')}${c}</div>`)}
- ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>максимум ${f.maxGuests}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`)}`,
- main:n?{text:`Забронировать · ${n} ${pl(n,'ночь','ночи','ночей')} · ${rub(n*f.price)}`,fn:()=>go('flatForm')}:{text:'Выберите даты',disabled:true}}};
+ ${sec('',`<div class="cell"><span class="tx"><b>Гостей</b><span>${f.maxGuests} ${pl(f.maxGuests,'место','места','мест')}${f.extraBeds?`, можно до ${cap} с доп. местами`:''}</span></span><span class="stp"><button data-g="-1" aria-label="Меньше">−</button><span>${U.guests}</span><button data-g="1" aria-label="Больше">+</button></span></div>`,
+   ex?`${ex} доп. спальн${ex>1?'ых места':'ое место'} · +${rub(A.extraBedPrice||0)} за ночь каждое`:'')}
+ ${(A.services||[]).length?sec('Дополнительно',A.services.map(x=>`<label class="cell"><span class="tx"><b>${esc(x.name)}</b><span>${x.price?rub(x.price)+' за проживание':'бесплатно'}</span></span><input class="sw" type="checkbox" data-sv="${esc(x.id)}" ${U.sv[x.id]?'checked':''}></label>`).join('')):''}`,
+ main:n?{text:`Забронировать · ${n} ${pl(n,'ночь','ночи','ночей')} · ${rub(T)}`,fn:()=>go('flatForm')}:{text:'Выберите даты',disabled:true}}};
 scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирование',sub:f.name,html:`
- ${sec('Бронь',cell({t:`${fmtD(U.start)} — ${fmtD(U.end)}`,s:`${U.guests} ${pl(U.guests,'гость','гостя','гостей')}`,val:rub(n*f.price)}))}
+ ${sec('Бронь',cell({t:`${fmtD(U.start)} — ${fmtD(U.end)}`,s:esc(rentSummary()),val:rub(rentTotal())}))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>`,esc(A.bookingNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
@@ -370,9 +377,9 @@ const stepSlider=(id,label,vals,cur)=>`<div class="cell"><span class="tx"><b>${l
  <div class="cell" style="padding-top:0;flex-direction:column;align-items:stretch;gap:4px"><input id="${id}" type="range" min="0" max="${vals.length-1}" step="1" value="${Math.max(0,vals.indexOf(cur))}" aria-label="${label}">
  <div class="ticks">${vals.map(v=>`<span>${fm(v)}</span>`).join('')}</div></div>`;
 // мини-галерея: фото 4:3 листаются вбок; без фото — заглушка с подписью; нажатие на фото — во весь экран
-const gallery=h=>(h.gallery||[]).length?`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">Варианты</div><div class="gal">${h.gallery.map((g,i)=>g.img
+const gallery=(h,title='Варианты')=>(h.gallery||[]).length?`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">${title}</div><div class="gal">${h.gallery.map((g,i)=>g.img
  ?`<button class="gi" data-gal="${i}"><img src="photos/${esc(g.img)}" alt="${esc(g.caption)}" loading="lazy" decoding="async"><span class="tag">${esc(g.caption)}</span></button>`
- :`<div class="gi">${flatPh(h,esc(g.caption))}</div>`).join('')}</div>${h.gallery.some(g=>!g.img)?'<div class="sec-f" style="margin:0 16px">В рабочей версии здесь будут фото ваших построек.</div>':''}`:'';
+ :`<div class="gi">${flatPh(h,esc(g.caption))}</div>`).join('')}</div>${h.gallery.some(g=>!g.img)?'<div class="sec-f" style="margin:0 16px">В рабочей версии здесь будут настоящие фото.</div>':''}`:'';
 const dimLine=()=>{const{h,a}=bldTotal(),b=U.bld;return`${fm(b.w)}×${fm(b.l)} м · ${fm(a)} м² · срок около ${h.months||1} ${pl(h.months||1,'месяца','месяцев','месяцев')}`};
 const terrLine=()=>U.bld.terr==='none'?'':`Терраса ${fm(U.bld.terr==='w'?U.bld.w:U.bld.l)} × ${fm(U.bld.td)} м = ${fm(terrArea())} м² · ${rub(B.terracePricePerM2||0)} за м²`;
 scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map(h=>`<div class="sec"><button class="grp" data-house="${esc(h.id)}" style="display:block;width:100%;text-align:left">
@@ -443,7 +450,9 @@ scr.admin=()=>{
  if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.offices.0.name','Офис в демо: название')+fT('lunch.offices.0.address','Офис в демо: адрес')+fT('lunch.note','Подпись под меню'))+
    sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
  if(t==='rent')h=sec('Экран',fT('rent.title','Название')+fT('rent.subtitle','Подзаголовок')+fT('rent.note','Подпись под списком'))+
-   sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.');
+   sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.')+
+   sec('Места',getP(a.draft,'rent.flats').map((x,i)=>fN(`rent.flats.${i}.maxGuests`,esc(x.name)+': основных мест','')+fN(`rent.flats.${i}.extraBeds`,'доп. мест','')).join('')+fN('rent.extraBedPrice','Доп. место, за ночь'))+
+   sec('Доп. услуги, ₽ за проживание',rows('rent.services',{name:'name',num:'price'}));
  if(t==='build')h=sec('Экран',fT('build.title','Название')+fT('build.subtitle','Подзаголовок'))+
    sec('Что строим: базовая цена ₽ за м² и показ',rows('build.houses',{name:'name',num:'pricePerM2',bool:'show'}))+
    sec('Размеры для ползунков, м (через запятую)',getP(a.draft,'build.houses').map((x,i)=>fT(`build.houses.${i}.widths`,esc(x.name)+': ширина')+fT(`build.houses.${i}.lengths`,esc(x.name)+': длина')).join(''))+
@@ -492,7 +501,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.off){U.off=+d.off;return go('office')}
  if(d.house){bldPick(B.houses.find(x=>x.id===d.house));return go('house')}
- if(d.gal){const g=house().gallery[+d.gal],o=document.createElement('div');o.className='lb';o.innerHTML=`<img src="photos/${esc(g.img)}" alt=""><span>${esc(g.caption)}</span>`;o.onclick=()=>o.remove();document.body.append(o);return}
+ if(d.gal){const g=(U.scr==='flat'?curFlat():house()).gallery[+d.gal],o=document.createElement('div');o.className='lb';o.innerHTML=`<img src="photos/${esc(g.img)}" alt=""><span>${esc(g.caption)}</span>`;o.onclick=()=>o.remove();document.body.append(o);return}
  if(d.og){U.bld.opt[d.og]=d.oi;return render()}
  if(d.tr){U.bld.terr=d.tr;return render()}
  if(d.go)return go(d.go);
@@ -502,9 +511,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.lamp){U.rep.lamps=Math.max(0,Math.min(40,U.rep.lamps+ +d.lamp));return render()}
  if(d.cat){U.cat=d.cat;return render()}
  if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
- if(d.flat){U.flat=d.flat;U.start=U.end=null;U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
+ if(d.flat){U.flat=d.flat;U.start=U.end=null;U.sv={};U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
  if(d.di){const i=+d.di;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else U.end=i;return render()}
- if(d.g){U.guests=Math.max(1,Math.min(curFlat().maxGuests,U.guests+ +d.g));return render()}
+ if(d.g){const f=curFlat();U.guests=Math.max(1,Math.min(f.maxGuests+(f.extraBeds||0),U.guests+ +d.g));return render()}
 });
 document.addEventListener('input',e=>{const t=e.target;
  if(t.inputMode==='tel'){if(e.inputType!=='deleteContentBackward')t.value=phoneMask(t.value);return}
@@ -519,6 +528,7 @@ document.addEventListener('input',e=>{const t=e.target;
 });
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
+ if(t.dataset.sv){U.sv[t.dataset.sv]=t.checked;return render()}
  if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
 // Владелец? Спрашиваем сервер (он проверяет подпись Telegram). Остальным кнопка «Админка» не показывается.
