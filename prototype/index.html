@@ -264,7 +264,10 @@ function lunchPlan(){const now=new Date(),[h,m]=(L.orderDeadline||'19:00').split
 const lunchDay=()=>lunchPlan().day;
 const lunchWin=()=>'с '+(L.deliveryWindow||'12:00–15:00').replace('–',' до ');
 const cap=s=>s.replace(/^./,c=>c.toUpperCase());
-const OF=()=>L.office||{name:'Ваш офис',address:''};
+const OF=()=>(L.offices||[])[0]||{name:'Ваш офис',address:'',code:'office'};
+// Офисы в демо-админке столовой: копия из data, новые живут до закрытия витрины
+const offs=()=>U.offs||(U.offs=clone(L.offices||[OF()]));
+const offLink=o=>`t.me/бот_столовой?startapp=${o.code}`;
 scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum(),P=lunchPlan();return{title:L.title,sub:L.subtitle,html:`
  <div class="sec" style="margin-top:16px"><div class="grp">${cell({ico:ic('cityscape_at_dusk'),col:'#8B5CF6',t:esc(OF().name),s:esc(OF().address)})}</div></div>
  <div class="sec-h" style="margin:20px 16px 0;padding:0 4px">Меню на ${P.day}</div>
@@ -290,12 +293,33 @@ scr.kitchen=()=>{const all=[...(L.kitchenSample||[]),...(U.myLunch?[{office:OF()
  sum=it=>Object.entries(it).reduce((a,[id,q])=>a+(dish(id)?dish(id).price*q:0),0),offices=[...new Set(all.map(o=>o.office))],tot={};
  all.forEach(o=>{for(const id in o.items)if(dish(id))tot[id]=(tot[id]||0)+o.items[id]});
  return{title:'Столовая',sub:'пример · так видит менеджер',html:`
- <div class="sec-h" style="margin:16px 16px 0;padding:0 4px">Заказы на ${lunchDay()}</div>
+ ${sec('',cell({ico:ic('link'),col:'#0A84FF',t:'Офисы и ссылки',s:'Своя ссылка для каждого офиса',chev:1,go:'offices'}))}
+ <div class="sec-h" style="margin:24px 16px 0;padding:0 4px">Заказы на ${lunchDay()}</div>
  ${offices.map(of=>{const os=all.filter(o=>o.office===of);return sec(`${esc(of)} · ${os.length} чел. · ${rub(os.reduce((a,o)=>a+sum(o.items),0))}`,
    os.map(o=>cell({t:esc(o.person)+(o.me?' (вы)':''),s:esc(line(o.items)),val:rub(sum(o.items))})).join(''))}).join('')}
  ${sec('Сводка для кухни',Object.entries(tot).map(([id,q])=>cell({ico:ic(dish(id).icon),col:'#22C55E',t:esc(dish(id).name),val:'×'+q})).join(''))}
  <div class="note">Пример: заказы коллег выдуманы, ваш — из демо. В рабочей версии этот список собирается сам, без переписывания из чата.</div>`,
  main:{text:D.done.button,fn:home}}};
+const offCount=name=>[...(L.kitchenSample||[]),...(U.myLunch?[{office:OF().name}]:[])].filter(o=>o.office===name).length;
+scr.offices=()=>({title:'Офисы и ссылки',sub:'пример · админка столовой',html:`
+ ${sec('Офисы',offs().map((o,i)=>cell({ico:ic('cityscape_at_dusk'),col:'#8B5CF6',t:esc(o.name),s:esc(o.address),val:offCount(o.name)+' на завтра',act:`data-off="${i}"`,chev:1})).join(''),
+   'Менеджер отправляет ссылку в рабочий чат офиса. Сотрудник открывает её — офис и адрес уже подставлены, остаётся выбрать блюда.')}
+ ${sec('',cell({t:'+ Добавить офис',cls:'link',go:'officeNew'}))}
+ <div class="note">Пример: в демо новые офисы не сохраняются.</div>`,
+ main:{text:'Добавить офис',fn:()=>go('officeNew')}});
+scr.office=()=>{const o=offs()[U.off]||offs()[0];return{title:o.name,sub:'ссылка офиса',html:`
+ ${sec('Офис',cell({t:esc(o.name),s:esc(o.address)}))}
+ ${sec('Ссылка для сотрудников',`<div class="cell"><span class="tx"><b style="word-break:break-all">${esc(offLink(o))}</b></span></div>`,
+   'Отправьте её в чат офиса. В рабочей версии здесь будет настоящая ссылка на ваше приложение.')}
+ ${sec('Заказали на '+lunchDay(),cell({t:offCount(o.name)+' чел.',s:'Список — на экране «Столовая»'}))}`,
+ main:{text:'Скопировать ссылку',fn:()=>{try{navigator.clipboard.writeText('https://'+offLink(o))}catch(e){}liveMain('Скопировано ✓')}}}};
+const translit=s=>s.toLowerCase().split('').map(c=>({а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya'})[c]??c).join('').replace(/[^a-z0-9]+/g,'');
+scr.officeNew=()=>({title:'Новый офис',sub:'пример · админка столовой',html:`
+ ${sec('Офис',`<div class="inpcell"><input class="inp" id="on" placeholder="Название, например ООО «Вектор»" autocomplete="off"></div><div class="inpcell"><input class="inp" id="oa" placeholder="Адрес, этаж, офис" autocomplete="off"></div>`,'После создания появится ссылка для сотрудников этого офиса.')}
+ ${U.err?`<div class="err">${U.err}</div>`:''}`,
+ main:{text:'Создать ссылку',fn:()=>{const n=val('on').trim(),a=val('oa').trim();if(!n)return fail('Укажите название офиса');if(!a)return fail('Укажите адрес');
+   const base=translit(n.replace(/^(ооо|ип|ао|зао|пао)\s+/i,''))||'office';let code=base,k=2;while(offs().some(o=>o.code===code))code=base+k++;
+   offs().push({code,name:n,address:a});U.off=offs().length-1;U.stack.pop();U.scr='offices';go('office')}}});
 
 const flatPh=(f,tag)=>`<div class="ph" style="background:linear-gradient(160deg,${esc(f.color1)},${esc(f.color2)})"><span class="em" aria-hidden="true">${ic(f.icon)}</span><span class="tag">${tag}</span></div>`;
 scr.rent=()=>({title:A.title,sub:A.subtitle,html:A.flats.filter(f=>f.show).map(f=>`<div class="sec"><button class="grp" data-flat="${esc(f.id)}" style="display:block;width:100%;text-align:left">
@@ -370,7 +394,7 @@ scr.admin=()=>{
  if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
    sec('Виды работ, ₽ за м²',rows('repair.works',{name:'name',num:'price',move:1}))+
    sec('Дополнительно',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
- if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.office.name','Офис в демо: название')+fT('lunch.office.address','Офис в демо: адрес')+fT('lunch.note','Подпись под меню'))+
+ if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.offices.0.name','Офис в демо: название')+fT('lunch.offices.0.address','Офис в демо: адрес')+fT('lunch.note','Подпись под меню'))+
    sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
  if(t==='rent')h=sec('Экран',fT('rent.title','Название')+fT('rent.subtitle','Подзаголовок')+fT('rent.note','Подпись под списком'))+
    sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.');
@@ -414,10 +438,11 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-pack],[data-at],[data-mv]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-pack],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
+ if(d.off){U.off=+d.off;return go('office')}
  if(d.house){U.bld.house=d.house;U.bld.ex={};return go('house')}
  if(d.pack){U.bld.pack=d.pack;return render()}
  if(d.go)return go(d.go);
