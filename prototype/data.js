@@ -151,31 +151,55 @@ window.SHOWCASE = {
   /* ───────────── 6. ДЕМО «ДОМА И БАНИ ПОД КЛЮЧ» ───────────── */
   build: {
     title: 'Дома и бани',
-    subtitle: 'демо · строительство под ключ',
+    subtitle: 'демо · расчёт стоимости',
     note: 'В рабочей версии здесь будут фото и планировки проектов.',
 
-    // Проекты. area — площадь, м² (на неё умножается цена комплектации)
-    // show: false — скрыть; color1/color2 — градиент обложки вместо фото
+    // Что строим. Размеры в метрах, дробные — через точку (2.4).
+    //   sizes — готовые размеры «ширина×длина» через запятую;
+    //   или widths + lengths — ширина и длина выбираются отдельно.
+    // Площадь = ширина × длина. pricePerM2 — базовая цена за 1 м² (сама постройка);
+    // months — примерный срок; foundation — фундамент, выбранный сразу;
+    // show: false — скрыть; color1/color2 — цвет обложки
     houses: [
-      { id: 'h1', icon: 'hut', name: 'Баня 6×4',            info: 'Брус · парная, мойка, комната отдыха', area: 36,  show: true, color1: '#3B2414', color2: '#A86B3C' },
-      { id: 'h2', icon: 'house_with_garden', name: 'Каркасный дом 98 м²', info: '1 этаж · 3 спальни · терраса',         area: 98,  show: true, color1: '#173A2A', color2: '#4E9B6F' },
-      { id: 'h3', icon: 'house_timber', name: 'Дом из бруса 140 м²', info: '2 этажа · 4 спальни · котельная',      area: 140, show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'cabin', icon: 'house', name: 'Бытовка', info: 'Для дачи и стройки', widths: '2, 2.4, 3', lengths: '2.4, 4, 6', pricePerM2: 15000, months: 1, foundation: 'none', show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'bath', icon: 'hut', name: 'Баня', info: 'Парная, мойка, комната отдыха', sizes: '2×4, 4×6, 4×8, 8×8', pricePerM2: 28000, months: 2, foundation: 'piles', show: true, color1: '#3B2414', color2: '#A86B3C' },
+      { id: 'frame', icon: 'house_with_garden', name: 'Каркасный дом', info: 'Для жизни круглый год', sizes: '6×6, 6×8, 8×8, 8×10, 10×10, 10×12', pricePerM2: 22000, months: 4, foundation: 'piles', show: true, color1: '#173A2A', color2: '#4E9B6F' },
     ],
 
-    // Комплектации: цена за 1 м² площади проекта; months — срок стройки
-    packages: [
-      { id: 'box',  icon: 'brick', name: 'Коробка',       pricePerM2: 22000, months: 2 },
-      { id: 'warm', icon: 'insulation', name: 'Тёплый контур', pricePerM2: 32000, months: 3 },
-      { id: 'key',  icon: 'key', name: 'Под ключ',      pricePerM2: 48000, months: 5 },
+    // Выбор на экране постройки. Цена каждого пункта — за 1 м² площади, добавляется к базовой.
+    // Сразу выбран первый пункт группы (фундамент — по полю foundation у постройки)
+    options: [
+      { id: 'warm', title: 'Утепление', items: [
+        { id: 'cold', name: 'Холодная', text: 'Без утепления',   pricePerM2: 0 },
+        { id: 'warm', name: 'Тёплая',   text: 'С утеплением',    pricePerM2: 4500 },
+      ] },
+      { id: 'finish', title: 'Отделка', items: [
+        { id: 'none',  name: 'Без отделки', text: 'Только стены',        pricePerM2: 0 },
+        { id: 'rough', name: 'Черновая',    text: 'Под свою отделку',     pricePerM2: 3000 },
+        { id: 'fine',  name: 'Чистовая',    text: 'Можно заезжать',       pricePerM2: 7000 },
+      ] },
+      { id: 'found', title: 'Фундамент', items: [
+        { id: 'none',  name: 'Не нужен',         text: 'Ставим на блоки',        pricePerM2: 0 },
+        { id: 'piles', name: 'Свайно-винтовой',  text: 'Быстро, любой грунт',    pricePerM2: 3500 },
+        { id: 'strip', name: 'Ленточный',        text: 'Бетонная лента',         pricePerM2: 6500 },
+        { id: 'slab',  name: 'Монолитная плита', text: 'Для сложных грунтов',    pricePerM2: 8500 },
+      ] },
     ],
-    packageStart: 'warm',           // какая комплектация выбрана сразу
+
+    // Терраса: варианты площади, м² (через запятую), и цена за 1 м²
+    terraceSizes: '10, 20, 30',
+    terracePricePerM2: 9500,
 
     // Дополнительные работы — фиксированная цена, ₽. Можно добавлять свои строки
     extras: [
-      { id: 'found',   name: 'Свайный фундамент',     text: 'Сваи, обвязка, монтаж',   price: 280000 },
-      { id: 'terrace', name: 'Терраса 20 м²',         text: 'Лиственница, ограждение', price: 190000 },
-      { id: 'project', name: 'Привязка к участку',    text: 'Выезд, план, разметка',   price: 45000 },
+      { id: 'project', name: 'Выезд на участок и разметка', text: 'Инженер осмотрит участок и разметит место', price: 45000 },
     ],
+
+    // Кнопка «Консультация специалиста»
+    consultTitle: 'Консультация специалиста',
+    consultText: 'Поможем выбрать размер, фундамент и отделку',
+    consultDoneTitle: 'Заявка принята',
+    consultDoneText: 'Специалист перезвонит и ответит на вопросы.',
 
     priceNote: 'Цены в демо примерные. Точную смету прораб посчитает после выезда на участок.',
     button: 'Получить смету',       // к тексту кнопки добавится «· от N ₽»

@@ -32,13 +32,13 @@ function verifyInitData(initData) {
 function validate(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Нет данных';
   for (const k of ['home', 'repair', 'lunch', 'rent', 'build', 'done']) if (!d[k] || typeof d[k] !== 'object') return 'Нет раздела ' + k;
-  const lists = [['repair', 'works'], ['lunch', 'menu'], ['rent', 'flats'], ['build', 'houses'], ['build', 'packages'], ['build', 'extras'], ['home', 'tiles']];
+  const lists = [['repair', 'works'], ['lunch', 'menu'], ['rent', 'flats'], ['build', 'houses'], ['build', 'options'], ['build', 'extras'], ['home', 'tiles']];
   for (const [a, b] of lists) if (!Array.isArray(d[a][b]) || !d[a][b].length) return `Пустой список ${a}.${b}`;
   let bad = null;
   (function walk(o, path) {
     if (bad || !o || typeof o !== 'object') return;
     for (const [k, v] of Object.entries(o)) {
-      if (/^(price|pricePerM2|lampPrice|demolitionPrice|materialsPrice|area|areaMin|areaMax|areaStart|lampsStart|months|maxGuests)$/.test(k) && !(typeof v === 'number' && isFinite(v) && v >= 0)) { bad = `${path}${k}: нужно число не меньше 0`; return; }
+      if (/^(price|pricePerM2|lampPrice|demolitionPrice|materialsPrice|area|areaMin|areaMax|areaStart|lampsStart|months|maxGuests|terracePricePerM2)$/.test(k) && !(typeof v === 'number' && isFinite(v) && v >= 0)) { bad = `${path}${k}: нужно число не меньше 0`; return; }
       walk(v, `${path}${k}.`);
     }
   })(d, '');
