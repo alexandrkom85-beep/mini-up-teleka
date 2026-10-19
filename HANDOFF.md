@@ -14,7 +14,10 @@
 **Принятые решения (не пересматривать без владельца):**
 - Сейчас нужна **простая показательная демка**: без сервера, без базы данных, без сбора и хранения контактов.
 - Два файла (`prototype/index.html` + `prototype/data.js`) → GitHub Pages → кнопка меню бота @Bustool_bot (настроена через Bot API). Демо: https://alexandrkom85-beep.github.io/mini-up-teleka/prototype/
-- GitHub Pages с российских IP открывается нестабильно (17.10.2026: ошибка `ERR_CONNECTION_CLOSED`, со второй попытки — медленно). До рассылки клиентам — перенос на Yandex Object Storage (владелец ещё не зарегистрировался).
+- GitHub Pages с российских IP открывается нестабильно (17.10.2026: `ERR_CONNECTION_CLOSED`). С 19.10.2026 витрина в **Yandex Object Storage**: https://bustool-showcase.website.yandexcloud.net/ — кнопка бота ведёт сюда.
+  - Облако `cloud-alexandr-komar`, каталог `default`, бакет `bustool-showcase` (публичное чтение, хостинг сайта).
+  - Публикация: `bash publish.sh` (сервисный аккаунт `showcase-publisher`, роль `storage.editor`; ключ — `.env` → `YC_SA_KEY_JSON`). Утилита yc: `~/yandex-cloud/bin/yc`, профили `showcase` (вход владельца через браузер, ~12 ч) и `showcase-sa`.
+  - Вход владельца в yc: с 01.06.2026 OAuth-токены Яндекса для yc не принимаются — только `yc init` с входом через браузер.
 - Кнопка «Обсудить проект» открывает чат с владельцем в Telegram (через `Telegram.WebApp.openTelegramLink`). Контакты нигде не сохраняются.
 - Админки в демо нет (убрана 17.10.2026 по решению владельца). Тексты и цены владелец меняет сам в `prototype/data.js` через VS Code. Формы в демо ничего не сохраняют и не отправляют, localStorage не используется.
 - Сервер, база, хранение заявок, 152-ФЗ, обход ограничений Telegram API — **только когда появится реальный клиентский проект**.
@@ -34,7 +37,9 @@
 | `prototype/index.html` | **само приложение**: вёрстка, стили, логика экранов |
 | `prototype/data.js` | **все тексты и цены демо** — править здесь, с подписанными разделами |
 | `prototype/icons/` | значки Fluent Emoji 3D (Microsoft, MIT), 160 px; в data.js указываются по имени файла: `icon: 'house'` |
-| `.env` | секреты (токен бота, Telegram ID владельца). Заполнен. **Никогда не публиковать** |
+| `publish.sh` | публикация витрины в Yandex Object Storage |
+| `docs/07-admin-architecture.md` | схема админки (на согласовании) |
+| `.env` | секреты (токен бота, Telegram ID владельца, ключ сервисного аккаунта Yandex Cloud). Заполнен. **Никогда не публиковать** |
 | `.gitignore` | исключает `.env`, `node_modules/`, `*.sqlite`, `_to_delete/` из Git |
 | `.claude/skills/` | 23 скилла для Claude Code (frontend-design, web-design-guidelines, shadcn, superpowers и др.) |
 | `.claude/SKILLS-README.md` | список скиллов и откуда они |
