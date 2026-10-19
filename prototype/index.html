@@ -105,6 +105,7 @@ img.ic3d{width:1em;height:1em;display:block;object-fit:contain}
 .stp{display:flex;align-items:center;background:var(--cell2);border-radius:12px;overflow:hidden;flex:none}
 .stp button{width:40px;height:34px;font-size:20px;color:var(--text)}
 .stp span{min-width:26px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--hint);padding:0 2px;font-variant-numeric:tabular-nums}
 .segc{display:flex;gap:8px;margin:16px 16px 0;overflow-x:auto;scrollbar-width:none}
 .segc::-webkit-scrollbar{display:none}
 .segc button{flex:1 0 auto;padding:10px 14px;border-radius:14px;background:var(--cell);border:1px solid var(--line);font-size:14px;font-weight:500;white-space:nowrap}
@@ -344,37 +345,45 @@ scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирова�
  main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
    finish(A.doneTitle,A.doneText)}}}};
 
-// Дома и бани: размер (готовые «Ш×Д» или ширина + длина отдельно), группы опций с ценой за м², терраса, доп. работы
+// Дома и бани: ширина и длина — ползунки по значениям из data, группы опций с ценой за м², терраса вдоль стороны, доп. работы
 const nums=s=>String(s||'').split(/[,;]\s*/).map(parseFloat).filter(x=>x>0);
-const fm=x=>String(+x.toFixed(2)).replace('.',',');
-const dimsOf=h=>String(h.sizes||'').split(/,\s*/).map(z=>z.split(/[×xх*]/i).map(parseFloat)).filter(d=>d[0]>0&&d[1]>0);
+const fm=x=>String(+(+x).toFixed(2)).replace('.',',');
 const house=()=>B.houses.find(x=>x.id===U.bld.house);
 const optSel=g=>g.items.find(i=>i.id===U.bld.opt[g.id])||g.items[0];
-function bldPick(h){const b=U.bld={house:h.id,ex:{},opt:{},terr:0,w:0,l:0};
- if(h.widths){const w=nums(h.widths),l=nums(h.lengths);b.w=w[0]||0;b.l=l[l.length-1]||0}else{const d=dimsOf(h)[0]||[0,0];b.w=d[0];b.l=d[1]}
+function bldPick(h){const w=nums(h.widths),l=nums(h.lengths),d=nums(B.terraceDepths);
+ const b=U.bld={house:h.id,ex:{},opt:{},w:w[0]||0,l:l[0]||0,terr:'none',td:d[0]||0};
  (B.options||[]).forEach(g=>b.opt[g.id]=g.id==='found'&&g.items.some(i=>i.id===h.foundation)?h.foundation:g.items[0].id)}
+const terrArea=()=>{const b=U.bld;return b.terr==='none'?0:(b.terr==='w'?b.w:b.l)*b.td};
 function bldTotal(){const h=house(),a=U.bld.w*U.bld.l;let per=h.pricePerM2||0;(B.options||[]).forEach(g=>per+=optSel(g).pricePerM2||0);
- let t=a*per+U.bld.terr*(B.terracePricePerM2||0);B.extras.forEach(x=>{if(U.bld.ex[x.id])t+=x.price});return{t,h,a}}
-function bldFrom(h){const ar=h.widths?[Math.min(...nums(h.widths))*Math.min(...nums(h.lengths))]:dimsOf(h).map(d=>d[0]*d[1]);
- return Math.min(...ar)*((h.pricePerM2||0)+(B.options||[]).reduce((s,g)=>s+Math.min(...g.items.map(i=>i.pricePerM2||0)),0))}
-const sizeTag=h=>{if(h.widths){const w=nums(h.widths),l=nums(h.lengths);return`${fm(Math.min(...w))}–${fm(Math.max(...w))} × ${fm(Math.min(...l))}–${fm(Math.max(...l))} м`}
- const d=dimsOf(h);return d.length?`${fm(d[0][0])}×${fm(d[0][1])}${d.length>1?` … ${fm(d.at(-1)[0])}×${fm(d.at(-1)[1])}`:''} м`:''};
-const chipRow=(title,html)=>`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">${title}</div><div class="segc" style="margin-top:0">${html}</div>`;
+ let t=a*per+terrArea()*(B.terracePricePerM2||0);B.extras.forEach(x=>{if(U.bld.ex[x.id])t+=x.price});return{t,h,a}}
+function bldFrom(h){return Math.min(...nums(h.widths))*Math.min(...nums(h.lengths))*((h.pricePerM2||0)+(B.options||[]).reduce((s,g)=>s+Math.min(...g.items.map(i=>i.pricePerM2||0)),0))}
+const sizeTag=h=>{const w=nums(h.widths),l=nums(h.lengths);const r=v=>v.length>1?`${fm(Math.min(...v))}–${fm(Math.max(...v))}`:fm(v[0]||0);return`${r(w)} × ${r(l)} м`};
 const consultCell=()=>sec('',cell({ico:ic('mobile_phone'),col:'#2F6BFF',t:esc(B.consultTitle),s:esc(B.consultText),chev:1,go:'buildConsult'}));
+// ползунок по списку значений: value — индекс
+const stepSlider=(id,label,vals,cur)=>`<div class="cell"><span class="tx"><b>${label}</b></span><span class="val" id="${id}V">${fm(cur)} м</span></div>
+ <div class="cell" style="padding-top:0;flex-direction:column;align-items:stretch;gap:4px"><input id="${id}" type="range" min="0" max="${vals.length-1}" step="1" value="${Math.max(0,vals.indexOf(cur))}" aria-label="${label}">
+ <div class="ticks">${vals.map(v=>`<span>${fm(v)}</span>`).join('')}</div></div>`;
+const dimLine=()=>{const{h,a}=bldTotal(),b=U.bld;return`${fm(b.w)}×${fm(b.l)} м · ${fm(a)} м² · срок около ${h.months||1} ${pl(h.months||1,'месяца','месяцев','месяцев')}`};
+const terrLine=()=>U.bld.terr==='none'?'':`Терраса ${fm(U.bld.terr==='w'?U.bld.w:U.bld.l)} × ${fm(U.bld.td)} м = ${fm(terrArea())} м² · ${rub(B.terracePricePerM2||0)} за м²`;
 scr.build=()=>({title:B.title,sub:B.subtitle,html:B.houses.filter(h=>h.show).map(h=>`<div class="sec"><button class="grp" data-house="${esc(h.id)}" style="display:block;width:100%;text-align:left">
    ${flatPh(h,esc(sizeTag(h)))}
    <div class="cell"><span class="tx"><b style="font-weight:600">${esc(h.name)}</b><span>${esc(h.info)}</span></span><span class="price">от ${rub(bldFrom(h))}</span></div></button></div>`).join('')+
    consultCell()+`<div class="note">${esc(B.note)}</div>`,main:{text:'Выберите, что строим',disabled:true}});
-scr.house=()=>{const{t,h,a}=bldTotal(),b=U.bld,ts=nums(B.terraceSizes);return{title:h.name,sub:h.info,html:`
- <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span>${fm(b.w)}×${fm(b.l)} м · ${fm(a)} м² · срок около ${h.months||1} ${pl(h.months||1,'месяца','месяцев','месяцев')}</span><span class="em" aria-hidden="true">${ic(h.icon)}</span></div>
- ${h.widths?chipRow('Ширина',nums(h.widths).map(w=>`<button data-bw="${w}" aria-pressed="${b.w===w}">${fm(w)} м</button>`).join(''))+chipRow('Длина',nums(h.lengths).map(l=>`<button data-bl="${l}" aria-pressed="${b.l===l}">${fm(l)} м</button>`).join(''))
-  :chipRow('Размер',dimsOf(h).map(([w,l])=>`<button data-bs="${w}x${l}" aria-pressed="${b.w===w&&b.l===l}">${fm(w)}×${fm(l)} м</button>`).join(''))}
+scr.house=()=>{const{t,h}=bldTotal(),b=U.bld,ds=nums(B.terraceDepths);return{title:h.name,sub:h.info,html:`
+ <div class="sum"><span>Предварительная стоимость</span><b id="bsumV">от ${rub(t)}</b><span id="bdim">${dimLine()}</span><span class="em" aria-hidden="true">${ic(h.icon)}</span></div>
+ ${sec('Размер',stepSlider('bW','Ширина',nums(h.widths),b.w)+stepSlider('bL','Длина',nums(h.lengths),b.l))}
  ${(B.options||[]).map(g=>`<div class="sec"><div class="sec-h">${esc(g.title)}</div><div class="opts ${g.items.length===3?'three':''}">${g.items.map(x=>`<button class="opt" data-og="${esc(g.id)}" data-oi="${esc(x.id)}" aria-pressed="${optSel(g).id===x.id}"><span class="ck"></span><b>${esc(x.name)}</b><span class="pr">${esc(x.text||'')}</span><span class="pr">${x.pricePerM2?'+'+rub(x.pricePerM2)+'/м²':'без доплаты'}</span></button>`).join('')}</div></div>`).join('')}
- ${ts.length?chipRow('Терраса',[0,...ts].map(v=>`<button data-tr="${v}" aria-pressed="${b.terr===v}">${v?v+' м²':'Без террасы'}</button>`).join(''))+`<div class="sec-f" style="margin:0 16px">${rub(B.terracePricePerM2||0)} за м²</div>`:''}
+ ${ds.length?`<div class="sec-h" style="margin:24px 16px 0;padding:0 4px">Терраса</div><div class="segc" style="margin-top:0">
+   <button data-tr="none" aria-pressed="${b.terr==='none'}">Без террасы</button><button data-tr="w" aria-pressed="${b.terr==='w'}">Вдоль ширины</button><button data-tr="l" aria-pressed="${b.terr==='l'}">Вдоль длины</button></div>
+   ${b.terr==='none'?'':sec('',stepSlider('tD','Глубина террасы',ds,b.td),`<span id="tArea">${terrLine()}</span>`)}`:''}
  ${sec('Дополнительно',B.extras.map(x=>`<label class="cell"><span class="tx"><b>${esc(x.name)}</b><span>${esc(x.text)} · ${rub(x.price)}</span></span><input class="sw" type="checkbox" data-ex="${esc(x.id)}" ${b.ex[x.id]?'checked':''}></label>`).join(''),esc(B.priceNote))}
  ${consultCell()}`,
  main:{text:B.button+' · от '+rub(t),fn:()=>go('buildForm')}}};
-const bldSummary=()=>{const{h,a}=bldTotal(),b=U.bld;return{t:`${h.name} ${fm(b.w)}×${fm(b.l)} м`,s:[fm(a)+' м²',...(B.options||[]).map(g=>optSel(g).name),b.terr?'терраса '+b.terr+' м²':''].filter(Boolean).join(' · ')}};
+// обновить цифры без перерисовки (во время движения ползунка)
+function bldLive(){const{t}=bldTotal(),b=U.bld,set=(id,v)=>{if($(id))$(id).textContent=v};
+ set('bsumV','от '+rub(t));set('bdim',dimLine());set('bWV',fm(b.w)+' м');set('bLV',fm(b.l)+' м');set('tDV',fm(b.td)+' м');set('tArea',terrLine());
+ liveMain(B.button+' · от '+rub(t));curMain=scr.house().main}
+const bldSummary=()=>{const{h,a}=bldTotal(),b=U.bld;return{t:`${h.name} ${fm(b.w)}×${fm(b.l)} м`,s:[fm(a)+' м²',...(B.options||[]).map(g=>optSel(g).name),terrArea()?'терраса '+fm(terrArea())+' м²':''].filter(Boolean).join(' · ')}};
 scr.buildForm=()=>{const{t}=bldTotal(),S=bldSummary();return{title:B.formTitle,sub:B.title,html:`
  ${sec('Ваш расчёт',cell({t:esc(S.t),s:esc(S.s),val:'от '+rub(t)}))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="bn" placeholder="Имя" autocomplete="off"></div>
@@ -426,9 +435,9 @@ scr.admin=()=>{
    sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.');
  if(t==='build')h=sec('Экран',fT('build.title','Название')+fT('build.subtitle','Подзаголовок'))+
    sec('Что строим: базовая цена ₽ за м² и показ',rows('build.houses',{name:'name',num:'pricePerM2',bool:'show'}))+
-   sec('Размеры, м (через запятую)',getP(a.draft,'build.houses').map((x,i)=>x.widths!=null?fT(`build.houses.${i}.widths`,esc(x.name)+': ширина')+fT(`build.houses.${i}.lengths`,esc(x.name)+': длина'):fT(`build.houses.${i}.sizes`,esc(x.name)+': размеры Ш×Д')).join(''))+
+   sec('Размеры для ползунков, м (через запятую)',getP(a.draft,'build.houses').map((x,i)=>fT(`build.houses.${i}.widths`,esc(x.name)+': ширина')+fT(`build.houses.${i}.lengths`,esc(x.name)+': длина')).join(''))+
    (getP(a.draft,'build.options')||[]).map((g,i)=>sec(esc(g.title)+', ₽ за м²',rows(`build.options.${i}.items`,{name:'name',num:'pricePerM2'}))).join('')+
-   sec('Терраса',fT('build.terraceSizes','Площади, м² через запятую')+fN('build.terracePricePerM2','Цена за м²'))+
+   sec('Терраса',fT('build.terraceDepths','Глубина, м через запятую')+fN('build.terracePricePerM2','Цена за м²'))+
    sec('Дополнительные работы, ₽',rows('build.extras',{name:'name',num:'price'}));
  const msg=a.msg==='ok'?'<div class="amsg ok">Сохранено ✓ Клиенты уже видят изменения.</div>':a.msg?`<div class="amsg err">${esc(a.msg)}</div>`:'';
  return{title:'Админка',sub:'видна только вам',html:`<div class="segc">${[['home','Главная'],['repair','Ремонт'],['lunch','Обеды'],['rent','Аренда'],['build','Стройка']].map(([k,v])=>`<button data-at="${k}" aria-pressed="${t===k}">${v}</button>`).join('')}</div>
@@ -466,17 +475,14 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-bw],[data-bl],[data-bs],[data-og],[data-tr],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-tr],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.off){U.off=+d.off;return go('office')}
  if(d.house){bldPick(B.houses.find(x=>x.id===d.house));return go('house')}
- if(d.bw){U.bld.w=+d.bw;return render()}
- if(d.bl){U.bld.l=+d.bl;return render()}
- if(d.bs){[U.bld.w,U.bld.l]=d.bs.split('x').map(Number);return render()}
  if(d.og){U.bld.opt[d.og]=d.oi;return render()}
- if(d.tr!=null){U.bld.terr=+d.tr;return render()}
+ if(d.tr){U.bld.terr=d.tr;return render()}
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
@@ -491,6 +497,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
 document.addEventListener('input',e=>{const t=e.target;
  if(t.inputMode==='tel'){if(e.inputType!=='deleteContentBackward')t.value=phoneMask(t.value);return}
  if(t.dataset.p&&U.adm.draft){const ty=t.dataset.t;setP(U.adm.draft,t.dataset.p,ty==='num'?Math.max(0,+String(t.value).replace(',','.')||0):ty==='bool'?t.checked:t.value);admDirty();return}
+ if(t.id==='bW'||t.id==='bL'||t.id==='tD'){const h=house(),k={bW:['w',h.widths],bL:['l',h.lengths],tD:['td',B.terraceDepths]}[t.id];U.bld[k[0]]=nums(k[1])[+t.value];return bldLive()}
  // площадь: ползунок, ввод числом или длина × ширина — всё синхронно
  if(t.id==='area'||t.id==='areaN'||t.id==='dimL'||t.id==='dimW'){const u=U.rep,num=x=>parseFloat(String(x).replace(',','.'));
   if(t.id==='area'){u.area=+t.value;u.L=u.W='';$('areaN').value=fmtA(u.area);$('dimL').value=$('dimW').value=''}

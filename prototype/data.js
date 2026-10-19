@@ -154,24 +154,22 @@ window.SHOWCASE = {
     subtitle: 'демо · расчёт стоимости',
     note: 'В рабочей версии здесь будут фото и планировки проектов.',
 
-    // Что строим. Размеры в метрах, дробные — через точку (2.4).
-    //   sizes — готовые размеры «ширина×длина» через запятую;
-    //   или widths + lengths — ширина и длина выбираются отдельно.
-    // Площадь = ширина × длина. pricePerM2 — базовая цена за 1 м² (сама постройка);
+    // Что строим. widths / lengths — значения ползунков «Ширина» и «Длина», м, через запятую
+    // (дробные — через точку: 2.4). Площадь = ширина × длина. pricePerM2 — базовая цена за 1 м²;
     // months — примерный срок; foundation — фундамент, выбранный сразу;
     // show: false — скрыть; color1/color2 — цвет обложки
     houses: [
-      { id: 'cabin', icon: 'house', name: 'Бытовка', info: 'Для дачи и стройки', widths: '2, 2.4, 3', lengths: '2.4, 4, 6', pricePerM2: 15000, months: 1, foundation: 'none', show: true, color1: '#2A2340', color2: '#7A68C4' },
-      { id: 'bath', icon: 'hut', name: 'Баня', info: 'Парная, мойка, комната отдыха', sizes: '2×4, 4×6, 4×8, 8×8', pricePerM2: 28000, months: 2, foundation: 'piles', show: true, color1: '#3B2414', color2: '#A86B3C' },
-      { id: 'frame', icon: 'house_with_garden', name: 'Каркасный дом', info: 'Для жизни круглый год', sizes: '6×6, 6×8, 8×8, 8×10, 10×10, 10×12', pricePerM2: 22000, months: 4, foundation: 'piles', show: true, color1: '#173A2A', color2: '#4E9B6F' },
+      { id: 'cabin', icon: 'house', name: 'Бытовка', info: 'Для дачи и стройки', widths: '2, 2.4, 3, 4.4, 4.8', lengths: '2, 4, 6', pricePerM2: 15000, months: 1, foundation: 'none', show: true, color1: '#2A2340', color2: '#7A68C4' },
+      { id: 'bath', icon: 'hut', name: 'Баня', info: 'Парная, мойка, комната отдыха', widths: '2, 4, 6, 8', lengths: '4, 6, 8', pricePerM2: 28000, months: 2, foundation: 'piles', show: true, color1: '#3B2414', color2: '#A86B3C' },
+      { id: 'frame', icon: 'house_with_garden', name: 'Каркасный дом', info: 'Для жизни круглый год', widths: '6, 8, 10, 12', lengths: '6, 8, 10, 12', pricePerM2: 22000, months: 4, foundation: 'piles', show: true, color1: '#173A2A', color2: '#4E9B6F' },
     ],
 
     // Выбор на экране постройки. Цена каждого пункта — за 1 м² площади, добавляется к базовой.
     // Сразу выбран первый пункт группы (фундамент — по полю foundation у постройки)
     options: [
       { id: 'warm', title: 'Утепление', items: [
-        { id: 'cold', name: 'Холодная', text: 'Без утепления',   pricePerM2: 0 },
-        { id: 'warm', name: 'Тёплая',   text: 'С утеплением',    pricePerM2: 4500 },
+        { id: 'cold', name: 'Сезонный вариант',           text: 'Без утепления, на тёплое время', pricePerM2: 0 },
+        { id: 'warm', name: 'Для постоянного проживания', text: 'С утеплением, круглый год',     pricePerM2: 4500 },
       ] },
       { id: 'finish', title: 'Отделка', items: [
         { id: 'none',  name: 'Без отделки', text: 'Только стены',        pricePerM2: 0 },
@@ -186,8 +184,9 @@ window.SHOWCASE = {
       ] },
     ],
 
-    // Терраса: варианты площади, м² (через запятую), и цена за 1 м²
-    terraceSizes: '10, 20, 30',
+    // Терраса: идёт вдоль стороны постройки (ширины или длины), глубина — ползунок, м.
+    // Площадь = сторона × глубина
+    terraceDepths: '2, 3, 4',
     terracePricePerM2: 9500,
 
     // Дополнительные работы — фиксированная цена, ₽. Можно добавлять свои строки
