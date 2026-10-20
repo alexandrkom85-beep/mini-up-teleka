@@ -1,19 +1,23 @@
 /* Cloud Function «showcase-admin» — серверная проверка владельца и сохранение данных витрины.
-   Вход: POST, тело — JSON {action:'check'|'save', initData, data?}.
-   Доступ: подпись Telegram initData проверяется токеном бота; пускаем только OWNER_ID.
+   Вход: POST, тело — JSON {action:'check'|'save', platform:'tg'|'max', initData, data?}.
+   Доступ: подпись initData проверяется токеном бота своей площадки (алгоритм у Telegram и MAX одинаковый);
+   пускаем только владельца: OWNER_ID (Telegram) или OWNER_MAX_ID (MAX).
    Запись: data.json в бакет; перед записью — копия в backup/. Права на бакет — у сервисного
    аккаунта функции (IAM-токен из context.token, заголовок X-YaCloud-SubjectToken).
-   Переменные окружения: BOT_TOKEN, OWNER_ID, BUCKET, ALLOW_ORIGIN. Зависимостей нет. */
+   Переменные окружения: BOT_TOKEN, OWNER_ID, MAX_BOT_TOKEN, OWNER_MAX_ID, BUCKET, ALLOW_ORIGIN. Зависимостей нет. */
 const crypto = require('crypto');
 
-const BOT = process.env.BOT_TOKEN || '';
-const OWNER = String(process.env.OWNER_ID || '');
+// Площадки: токен бота и ID владельца. Нет токена или ID — площадка никого не пускает
+const PLATFORMS = {
+  tg:  { bot: process.env.BOT_TOKEN || '',     owner: String(process.env.OWNER_ID || '') },
+  max: { bot: process.env.MAX_BOT_TOKEN || '', owner: String(process.env.OWNER_MAX_ID || '') },
+};
 const BUCKET = process.env.BUCKET || '';
 const ORIGIN = process.env.ALLOW_ORIGIN || '*';
-const MAX_AGE_SEC = 24 * 3600;          // подпись Telegram действительна сутки
+const MAX_AGE_SEC = 24 * 3600;          // подпись действительна сутки
 const MAX_BYTES = 300 * 1024;
 
-function verifyInitData(initData) {
+function verifyInitData(initData, BOT) {
   if (!BOT || typeof initData !== 'string' || !initData) return null;
   const p = new URLSearchParams(initData);
   const hash = p.get('hash');
@@ -23,7 +27,9 @@ function verifyInitData(initData) {
   const secret = crypto.createHmac('sha256', 'WebAppData').update(BOT).digest();
   const calc = crypto.createHmac('sha256', secret).update(dataCheck).digest('hex');
   if (calc.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(calc), Buffer.from(hash))) return null;
-  const age = Date.now() / 1000 - Number(p.get('auth_date'));
+  let ts = Number(p.get('auth_date'));
+  if (ts > 1e12) ts /= 1000;            // на случай, если MAX присылает миллисекунды (по документации — секунды)
+  const age = Date.now() / 1000 - ts;
   if (!(age >= -60 && age < MAX_AGE_SEC)) return null;
   try { return JSON.parse(p.get('user')); } catch (e) { return null; }
 }
@@ -66,8 +72,9 @@ module.exports.handler = async (event, context) => {
   try { req = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString() : event.body || ''); }
   catch (e) { return res(400, { ok: false, error: 'Неверный запрос' }); }
 
-  const user = verifyInitData(req.initData);
-  if (!user || !OWNER || String(user.id) !== OWNER) return res(403, { ok: false, error: 'Нет доступа' });
+  const pf = PLATFORMS[req.platform === 'max' ? 'max' : 'tg'];
+  const user = verifyInitData(req.initData, pf.bot);
+  if (!user || !pf.owner || String(user.id) !== pf.owner) return res(403, { ok: false, error: 'Нет доступа' });
 
   if (req.action === 'check') return res(200, { ok: true });
 

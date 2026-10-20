@@ -23,12 +23,17 @@ fi
 
 "$YC" serverless function get --name $FN $P >/dev/null 2>&1 || "$YC" serverless function create --name $FN --description "Админка витрины" $P >/dev/null
 
+# MAX: токен бота и ID владельца в MAX — если заданы в .env (иначе админка в MAX никого не пускает)
+ENV="BOT_TOKEN=$BOT_TOKEN,OWNER_ID=$OWNER_TELEGRAM_ID,BUCKET=$BUCKET,ALLOW_ORIGIN=$ORIGIN"
+[ -n "${MAX_BOT_TOKEN:-}" ] && ENV="$ENV,MAX_BOT_TOKEN=$MAX_BOT_TOKEN"
+[ -n "${OWNER_MAX_ID:-}" ] && ENV="$ENV,OWNER_MAX_ID=$OWNER_MAX_ID"
+
 ZIP=$(mktemp -d)/fn.zip
 (cd admin/function && zip -q "$ZIP" index.js)
 "$YC" serverless function version create --function-name $FN \
   --runtime nodejs22 --entrypoint index.handler --memory 128m --execution-timeout 10s \
   --source-path "$ZIP" --service-account-id "$SA" \
-  --environment "BOT_TOKEN=$BOT_TOKEN,OWNER_ID=$OWNER_TELEGRAM_ID,BUCKET=$BUCKET,ALLOW_ORIGIN=$ORIGIN" $P >/dev/null
+  --environment "$ENV" $P >/dev/null
 "$YC" serverless function allow-unauthenticated-invoke --name $FN $P >/dev/null
 rm -f "$ZIP"
 

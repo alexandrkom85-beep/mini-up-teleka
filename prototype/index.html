@@ -1,5 +1,4 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Витрина мини-приложений</title>
 <link rel="icon" href="data:,">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -33,7 +32,7 @@ h1,h2,p{margin:0}
 .tgh .c{text-align:center;min-width:0}
 .tgh .c b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tgh .c span{display:block;font-size:12px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.in-tg .tgh{display:none}
+.in-tg .tgh,.in-max .tgh{display:none}
 
 /* home: brand row, bento */
 .top{display:flex;align-items:center;gap:12px;padding:16px 16px 0}
@@ -197,18 +196,33 @@ select.inp{appearance:none;-webkit-appearance:none}
 const ADMIN_API='https://functions.yandexcloud.net/d4ecqonkgf6dhc15g88r'; // Cloud Function «showcase-admin» (admin/function)
 function showMsg(t){document.getElementById('app').innerHTML='<div class="note" style="margin-top:80px">'+t+'</div>';document.getElementById('mb').style.display='none'}
 // Данные: data.json с сайта (актуальные, их меняет админка); если его нет (локально) — data.js. Всегда без кэша.
-(function(){const v='?v='+Date.now();
- const viaScript=()=>{const s=document.createElement('script');s.src='data.js'+v;s.onload=start;
+// Площадка: MAX передаёт в адресе после # параметр WebAppData, Telegram — tgWebAppData. Подгружаем только скрипт своей площадки
+// (telegram.org из MAX может не открываться). Не MAX — как раньше, скрипт Telegram (в браузере он ничего не делает).
+const IN_MAX=(()=>{let h=location.hash;try{const n=performance.getEntriesByType('navigation')[0];if(n)h+=' '+new URL(n.name).hash}catch(e){}
+ try{if(sessionStorage.getItem('WebAppData'))h+=' WebAppData='}catch(e){}return !/tgWebAppData/.test(h)&&/(^|[#&\s])WebAppData=/.test(h)})();
+const sdk=new Promise(ok=>{const s=document.createElement('script');s.src=IN_MAX?'https://st.max.ru/js/max-web-app.js':'https://telegram.org/js/telegram-web-app.js';
+ s.onload=s.onerror=ok;setTimeout(ok,6000);document.head.appendChild(s)});
+(function(){const v='?v='+Date.now(),go_=()=>sdk.then(start);
+ const viaScript=()=>{const s=document.createElement('script');s.src='data.js'+v;s.onload=go_;
   s.onerror=()=>showMsg('Не удалось загрузить данные витрины. Проверьте интернет и откройте ещё раз.');document.head.appendChild(s)};
  if(location.protocol==='file:')return viaScript();
- fetch('data.json'+v,{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{window.SHOWCASE=d;start()}).catch(viaScript)})();
+ fetch('data.json'+v,{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{window.SHOWCASE=d;go_()}).catch(viaScript)})();
 function start(){
 let D=window.SHOWCASE;
 if(!D||!D.home||!D.repair||!D.lunch||!D.rent||!D.build)return showMsg('Ошибка в data.js: проверьте запятые, кавычки и скобки рядом с последней правкой.');
-const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+// TG — Telegram, MX — MAX, иначе браузер. В MAX нет главной кнопки и цветов шапки: кнопка внизу своя, как в браузере
+const TG=!IN_MAX&&window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+const MX=IN_MAX&&window.WebApp&&window.WebApp.initData?window.WebApp:null;
+const PF={id:TG?'tg':MX?'max':'',name:MX?'MAX':'Telegram',sdk:TG||MX,initData:(TG||MX||{}).initData||''};
 if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
   try{TG.setHeaderColor('#0B0D12');TG.setBackgroundColor('#0B0D12');if(TG.setBottomBarColor)TG.setBottomBarColor('#0B0D12')}catch(e){}}
-function openChat(){const u='https://t.me/'+D.contact;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
+if(MX){document.documentElement.classList.add('in-max');try{MX.ready()}catch(e){}}
+// вибро-отклик: одинаковые названия в Telegram и MAX (в MAX не работает на компьютере и в вебе)
+const hap=(k,v)=>{try{const H=PF.sdk&&PF.sdk.HapticFeedback;if(H)H[k](v)}catch(e){}};
+const BB=()=>PF.sdk&&PF.sdk.BackButton;
+// «Обсудить проект»: в MAX — ссылка contactMax (max.ru/…), если её нет — Telegram во внешнем браузере
+function openChat(){const u='https://t.me/'+D.contact;
+ if(MX)return D.contactMax?MX.openMaxLink(D.contactMax):MX.openLink(u);if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
 const rub=n=>Math.round(+n||0).toLocaleString('ru-RU')+' ₽';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Ремонт: новые поля (натяжной потолок, режимы) могут отсутствовать в живом data.json — подставляем значения по умолчанию
@@ -224,7 +238,7 @@ const $=id=>document.getElementById(id);
 function go(s){if(U.scr!==s)U.stack.push(U.scr);U.scr=s;U.err='';render();window.scrollTo(0,0)}
 function back(){U.scr=U.stack.pop()||'home';U.err='';render();window.scrollTo(0,0)}
 function home(){U.stack=[];U.scr='home';U.err='';render();window.scrollTo(0,0)}
-function finish(h,p,x){U.done={h,p,...x};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}
+function finish(h,p,x){U.done={h,p,...x};U.cart={};U.stack=[];U.scr='done';render();window.scrollTo(0,0);hap('notificationOccurred','success')}
 // значок: имя файла из icons/ → картинка; иначе — текст (эмодзи)
 // ICON_VER — поднять при замене картинок с теми же именами (иначе Telegram сутки показывает старые)
 const ICON_VER='2';
@@ -245,7 +259,8 @@ scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
  <div class="bento">${H.tiles.map(tile).join('')}</div>
  ${sec(esc(H.benefitsTitle),H.benefits.map(b=>cell({ico:ic(b.icon),col:esc(b.color),t:esc(b.title),s:esc(b.text)})).join(''))}
  ${IS_OWNER?sec('Только для вас',cell({ico:ic('gear'),col:'#8E8E93',t:'Админка',s:'Цены, тексты, порядок плиток',chev:1,go:'admin'})):''}
- <div class="note">${esc(H.note)}</div>`,
+ <div class="note">${esc(H.note)}</div>
+ ${MX&&(MX.initDataUnsafe||{}).start_param==='whoami'?`<div class="note">Ваш ID в MAX: <b>${esc(((MX.initDataUnsafe||{}).user||{}).id)}</b> — впишите его в .env (OWNER_MAX_ID).</div>`:''}`,
  main:{text:H.button,fn:openChat}}};
 
 const clampA=a=>Math.min(R.areaMax,Math.max(R.areaMin,a));
@@ -306,7 +321,7 @@ const cap=s=>s.replace(/^./,c=>c.toUpperCase());
 const OF=()=>(L.offices||[])[0]||{name:'Ваш офис',address:'',code:'office'};
 // Офисы в демо-админке столовой: копия из data, новые живут до закрытия витрины
 const offs=()=>U.offs||(U.offs=clone(L.offices||[OF()]));
-const offLink=o=>`t.me/бот_столовой?startapp=${o.code}`;
+const offLink=o=>`${MX?'max.ru':'t.me'}/бот_столовой?startapp=${o.code}`;
 scr.lunch=()=>{const cats=['Все',...new Set(L.menu.map(m=>m.category))];if(!cats.includes(U.cat))U.cat='Все';const{n,s}=cartSum(),P=lunchPlan();return{title:L.title,sub:L.subtitle,html:`
  <div class="sec" style="margin-top:16px"><div class="grp">${cell({ico:ic('cityscape_at_dusk'),col:'#8B5CF6',t:esc(OF().name),s:esc(OF().address)})}</div></div>
  <div class="sec-h" style="margin:20px 16px 0;padding:0 4px">Меню на ${P.day}</div>
@@ -475,11 +490,11 @@ const setP=(o,p,v)=>{const k=p.split('.'),last=k.pop();k.reduce((a,x)=>a[x]??(a[
 function admDirty(){U.adm.dirty=true;U.adm.msg='';setMain(admMain());const u=$('admUndo');if(u)u.hidden=false;const m=document.querySelector('.amsg');if(m)m.remove()}
 const admMain=()=>U.adm.saving?{text:'Сохраняю…',disabled:true}:{text:U.adm.dirty?'Сохранить изменения':'Изменений нет',fn:admSave,disabled:!U.adm.dirty};
 function admSave(){const a=U.adm;a.saving=true;setMain(admMain());
- fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'save',initData:TG?TG.initData:'',data:a.draft})})
+ fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'save',platform:PF.id,initData:PF.initData,data:a.draft})})
   .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.ok)throw new Error(j.error||('ошибка '+r.status));
     D=window.SHOWCASE=clone(a.draft);R=normRepair(D.repair);L=D.lunch;A=D.rent;B=normBuild(D.build);a.dirty=false;a.msg='ok';
-    if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}))
-  .catch(e=>{a.msg='Не сохранилось: '+e.message;if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')})
+    hap('notificationOccurred','success')}))
+  .catch(e=>{a.msg='Не сохранилось: '+e.message;hap('notificationOccurred','error')})
   .finally(()=>{a.saving=false;render()})}
 const fT=(p,label)=>`<label class="fld"><span>${label}</span><input class="inp" data-p="${p}" value="${esc(getP(U.adm.draft,p))}"></label>`;
 const fN=(p,label,u='₽')=>`<div class="cell"><span class="tx"><b>${label}</b></span><input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}" value="${esc(getP(U.adm.draft,p))}" aria-label="${label}"><span class="u">${u}</span></div>`;
@@ -507,6 +522,7 @@ scr.admin=()=>{
  if(!IS_OWNER)return{title:'Админка',sub:'',html:'<div class="note" style="margin-top:60px">Админка доступна только владельцу витрины.</div>',main:{text:D.done.button,fn:home}};
  const a=U.adm;if(!a.draft)a.draft=clone(D);const t=a.tab;let h='';
  if(t==='home')h=sec('Заголовки',fT('home.heading','Заголовок')+fT('home.tagline','Подзаголовок'))+
+   sec('Куда ведёт «Обсудить проект»',fT('contact','Ник в Telegram, без @')+fT('contactMax','Ссылка на вас в MAX (https://max.ru/…)'),'Пусто в MAX — кнопка откроет Telegram.')+
    sec('Плитки: порядок и названия',rows('home.tiles',{name:'title',move:1}))+
    sec('Что получает бизнес',rows('home.benefits',{name:'title',move:1}));
  if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
@@ -540,7 +556,7 @@ scr.admin=()=>{
 // Демо-экран «Как это видит компания»: уведомление бота в Telegram + список заявок (чужие — из inbox.sample, выдуманы; ваша — из демо). Ничего не сохраняется
 function sendReq(key,me,h,p){const X=D[key].inbox||{};U.box={key,me:{...me,when:'только что',status:'Новая'}};finish(h,p,X.link?{next:{t:X.link,go:'inbox'}}:{})}
 scr.inbox=()=>{const{key,me}=U.box,X=D[key].inbox||{},all=[{...me,mine:1},...(X.sample||[])];return{title:X.title||'Заявки',sub:X.sub||'',html:`
- ${sec('Уведомление в Telegram',`<div class="tgmsg"><span class="from">${esc(X.bot||'Бот компании')}</span><b>🔔 ${esc(me.kind)}</b>
+ ${sec('Уведомление в '+PF.name,`<div class="tgmsg"><span class="from">${esc(X.bot||'Бот компании')}</span><b>🔔 ${esc(me.kind)}</b>
 ${esc(me.person)}, ${esc(me.phone)}
 ${me.lines.filter(Boolean).map(esc).join('\n')}
 <b>${esc(me.sum)}</b></div><div class="tgkb">${me.status==='Новая'?'<button data-act="take">Взять в работу</button>':'<span>✓ Вы взяли заявку в работу</span>'}</div>`,'Приходит менеджеру сразу после отправки — переписывать из чата ничего не нужно.')}
@@ -558,7 +574,7 @@ const val=id=>($(id)||{}).value||'';
 const phoneOk=v=>/^7\d{10}$/.test(v.replace(/\D/g,''));
 function phoneMask(v){let d=v.replace(/\D/g,'');if(!d)return'';if(d[0]==='8')d='7'+d.slice(1);else if(d[0]!=='7')d='7'+d;d=d.slice(0,11);
  const p=[d.slice(1,4),d.slice(4,7),d.slice(7,9),d.slice(9,11)];return'+7'+(p[0]?` (${p[0]}`:'')+(p[1]?`) ${p[1]}`:'')+(p[2]?`-${p[2]}`:'')+(p[3]?`-${p[3]}`:'')}
-function fail(m){U.err=m;const keep={};document.querySelectorAll('input[id],select[id]').forEach(e=>keep[e.id]=e.type==='checkbox'?e.checked:e.value);render();for(const k in keep){const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k]}}if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')}
+function fail(m){U.err=m;const keep={};document.querySelectorAll('input[id],select[id]').forEach(e=>keep[e.id]=e.type==='checkbox'?e.checked:e.value);render();for(const k in keep){const e=$(k);if(e){if(e.type==='checkbox')e.checked=keep[k];else e.value=keep[k]}}hap('notificationOccurred','error')}
 function dayL(i){const d=new Date();d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
 function nextDays(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i+1);return d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'})})}
 function fmtD(i){const d=new Date();d.setDate(d.getDate()+i);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}
@@ -569,7 +585,7 @@ function render(){const v=scr[U.scr]();const isHome=U.scr==='home';
  $('tgh').innerHTML=`<button class="l" data-act="${isHome?'':'back'}" aria-label="${isHome?'Закрыть':'Назад'}">${isHome?'Закрыть':'‹ Назад'}</button><div class="c"><b>${esc(v.title)}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div><span class="r" aria-hidden="true"><i>⋯</i></span>`;
  $('app').innerHTML=`<div class="scr">${v.html}</div>`;
  setMain(v.main);
- if(TG)isHome?TG.BackButton.hide():TG.BackButton.show();
+ if(BB())isHome?BB().hide():BB().show();
 }
 function setMain(m){curMain=m;const b=$('mbb');b.textContent=m.text;b.disabled=!!m.disabled;
  if(TG){const M=TG.MainButton;M.setParams(m.disabled?{color:'#2A2E38',text_color:'#7C8190'}:{color:'#2F6BFF',text_color:'#FFFFFF'});M.setText(m.text);m.disabled?M.disable():M.enable();M.show()}}
@@ -577,7 +593,8 @@ function liveMain(text){$('mbb').textContent=text;if(TG)TG.MainButton.setText(te
 function repLive(){const{t,ws}=repTotal(),T=(s,v)=>document.querySelectorAll(s).forEach(e=>e.textContent=v);curMain=repMain();liveMain(curMain.text);T('#sumV,#totV','от '+rub(t));
  ws.forEach(w=>{const k=CSS.escape(w.id);T(`[data-sub="${k}"]`,rub(workSum(w)));T(`[data-ar="${k}"]`,fmtA(rIt(w.id).area)+' м²')})}
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
-if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
+if(TG)TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
+if(BB())BB().onClick(back);
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-rm],[data-st],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-addrow],[data-del],[data-bh],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
@@ -595,12 +612,12 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
- if(d.act==='take'){U.box.me.status='В работе';if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
+ if(d.act==='take'){U.box.me.status='В работе';hap('impactOccurred','light');return render()}
  if(d.rm){const u=U.rep;if(d.rm==='all'&&u.mode!=='all'&&!Object.values(u.sel).some(Boolean))u.sel[u.work]=true;u.mode=d.rm;return render()}
  if(d.rw){const u=U.rep;if(u.mode==='all')u.sel[d.rw]=!u.sel[d.rw];else u.work=d.rw;return render()}
  if(d.st){const s=rIt(d.w),m={lamps:[1,R.lampMax],chand:[0,R.chandelierMax],corn:[1,50],led:[1,100]}[d.st];s[d.st]=Math.max(m[0],Math.min(m[1],s[d.st]+ +d.d));return render()}
  if(d.cat){U.cat=d.cat;return render()}
- if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
+ if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;hap('impactOccurred','light');return render()}
  if(d.flat){U.flat=d.flat;U.start=U.end=null;U.sv={};U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
  if(d.di){const i=+d.di,BZ=busyDays(curFlat());if(BZ.has(i))return;if(U.start==null||U.end!=null||i<=U.start){U.start=i;U.end=null}else{let ok=true;for(let j=U.start+1;j<i;j++)if(BZ.has(j))ok=false;if(ok)U.end=i;else{U.start=i;U.end=null}}return render()}
  if(d.g){const f=curFlat();U.guests=Math.max(1,Math.min(f.maxGuests+(f.extraBeds||0),U.guests+ +d.g));return render()}
@@ -621,8 +638,8 @@ document.addEventListener('change',e=>{const t=e.target;
  if(t.dataset.sv){U.sv[t.dataset.sv]=t.checked;return render()}
  if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
-// Владелец? Спрашиваем сервер (он проверяет подпись Telegram). Остальным кнопка «Админка» не показывается.
-if(TG&&TG.initData&&ADMIN_API)fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'check',initData:TG.initData})})
+// Владелец? Спрашиваем сервер (он проверяет подпись Telegram или MAX). Остальным кнопка «Админка» не показывается.
+if(PF.initData&&ADMIN_API)fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'check',platform:PF.id,initData:PF.initData})})
  .then(r=>r.ok?r.json():null).then(j=>{if(j&&j.ok){IS_OWNER=true;if(U.scr==='home')render()}}).catch(()=>{});
 render();
 }
