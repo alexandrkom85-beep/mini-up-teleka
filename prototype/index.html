@@ -153,6 +153,12 @@ select.inp{appearance:none;-webkit-appearance:none}
 .mb button:disabled{background:#2A2E38;color:#7C8190;box-shadow:none;cursor:not-allowed}
 .in-tg .mb{display:none}
 
+.tgmsg{margin:12px 12px 0;padding:10px 14px;background:var(--cell2);border-radius:16px 16px 16px 6px;white-space:pre-line;line-height:1.45;font-size:15px}
+.tgmsg .from{display:block;font-size:13px;font-weight:600;color:var(--link);margin-bottom:2px}
+.tgkb{padding:6px 12px 12px}.tgkb button,.tgkb span{display:block;width:100%;padding:10px;border-radius:12px;background:var(--soft);color:var(--link);font-weight:600;text-align:center;font-size:15px}
+.tgkb span{background:none;color:#4ADE80}
+.cell .when{font-weight:400;font-size:13px;color:var(--hint)}
+.st{font-size:13px;padding:3px 8px;border-radius:8px;background:var(--cell2);color:var(--hint)}.st.new{background:var(--soft);color:var(--link)}
 .done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:64px 24px 0}
 .done .ok{width:104px;height:104px;border-radius:32px;background:linear-gradient(145deg,#4ADE80,#16A34A);color:#fff;display:grid;place-items:center;font-size:52px;box-shadow:0 16px 36px -12px #22C55E}
 .done h2{font-size:24px;font-weight:700;margin-top:8px}
@@ -282,7 +288,9 @@ scr.repairForm=()=>{const{t,ws}=repTotal();return{title:R.formTitle,sub:R.title,
  ${sec('Удобный день',`<div class="inpcell"><select class="inp" id="rd">${nextDays(6).map(d=>`<option>${d}</option>`).join('')}</select></div>`)}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('rn').trim())return fail('Укажите имя');if(!phoneOk(val('rp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
-   finish(R.doneTitle,R.doneText)}}}};
+   const ad=val('ra').trim();sendReq('repair',{kind:'Заявка на замер',person:val('rn').trim(),phone:phoneMask(val('rp')),
+    text:ws.map(w=>w.name+', '+fmtA(rIt(w.id).area)+' м²').join(' + '),
+    lines:[...ws.map(w=>{const dt=repDet(w);return`${w.name}, ${fmtA(rIt(w.id).area)} м²${dt?' · '+dt:''} — ${rub(workSum(w))}`}),ad?'Адрес: '+ad:'','Замер: '+val('rd')],sum:'Итого: от '+rub(t)},R.doneTitle,R.doneText)}}}};
 
 const dish=id=>L.menu.find(x=>x.id===id);
 function cartSum(){let n=0,s=0;for(const id in U.cart){const m=dish(id);if(m&&m.available){n+=U.cart[id];s+=m.price*U.cart[id]}}return{n,s}}
@@ -385,7 +393,8 @@ scr.flatForm=()=>{const f=curFlat(),n=nights();return{title:'Бронирова�
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="fn" placeholder="Имя" autocomplete="off"></div><div class="inpcell"><input class="inp" id="fp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>`,esc(A.bookingNote)+' '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('fn').trim())return fail('Укажите имя');if(!phoneOk(val('fp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
-   finish(A.doneTitle,A.doneText)}}}};
+   sendReq('rent',{kind:'Новая бронь',person:val('fn').trim(),phone:phoneMask(val('fp')),text:`${f.name} · ${fmtD(U.start)} — ${fmtD(U.end)}`,
+    lines:[f.name,`${fmtD(U.start)} — ${fmtD(U.end)}, ${n} ${pl(n,'ночь','ночи','ночей')}`,rentSummary()],sum:'Сумма: '+rub(rentTotal())},A.doneTitle,A.doneText)}}}};
 
 // У каждой постройки свои блоки выбора (groups), доп. работы (extras) и терраса (terrace).
 // Если их нет (старые данные) — копируются из общих build.options / extras / terrace* (шаблон). show:false — скрыто
@@ -448,14 +457,17 @@ scr.buildForm=()=>{const{t}=bldTotal(),S=bldSummary();return{title:B.formTitle,s
  ${sec('Когда планируете начать',`<div class="inpcell"><select class="inp" id="bs">${B.startOptions.map(o=>`<option>${esc(o)}</option>`).join('')}</select></div>`)}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Отправить заявку',fn:()=>{if(!val('bn').trim())return fail('Укажите имя');if(!phoneOk(val('bp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
-   finish(B.doneTitle,B.doneText)}}}};
+   const ad=val('ba').trim(),ex=vis(house().extras).filter(x=>U.bld.ex[x.id]).map(x=>x.name);
+   sendReq('build',{kind:'Заявка на смету',person:val('bn').trim(),phone:phoneMask(val('bp')),text:S.t,
+    lines:[S.t+', '+fm(bldTotal().a)+' м²',...hGroups(house()).map(g=>g.title+': '+optSel(g).name.toLowerCase()),terrArea()?'Терраса '+fm(terrArea())+' м²':'',ex.length?'Доп. работы: '+ex.join(', '):'',ad?'Участок: '+ad:'','Начать: '+val('bs').toLowerCase()],sum:'Предварительно: от '+rub(t)},B.doneTitle,B.doneText)}}}};
 scr.buildConsult=()=>({title:B.consultTitle,sub:B.title,html:`
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="cn" placeholder="Имя" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="cp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="cq" placeholder="Ваш вопрос (необязательно)" autocomplete="off"></div>`,esc(B.consultText)+'. '+esc(D.formNote))}
  ${U.err?`<div class="err">${U.err}</div>`:''}`,
  main:{text:'Заказать звонок',fn:()=>{if(!val('cn').trim())return fail('Укажите имя');if(!phoneOk(val('cp')))return fail('Проверьте телефон: +7 и 10 цифр номера');
-   finish(B.consultDoneTitle,B.consultDoneText)}}});
+   const q=val('cq').trim();sendReq('build',{kind:'Перезвонить: консультация',person:val('cn').trim(),phone:phoneMask(val('cp')),text:'Консультация',
+    lines:[q?'Вопрос: '+q:'Вопрос не указан'],sum:'Перезвонить в рабочее время'},B.consultDoneTitle,B.consultDoneText)}}});
 
 /* ---------- админка (только владелец; сохранение — через Cloud Function) ---------- */
 const getP=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
@@ -525,6 +537,17 @@ scr.admin=()=>{
   <div class="note">Изменения увидят все посетители после «Сохранить». Перед каждым сохранением делается резервная копия.</div>
   <div id="admUndo" ${a.dirty?'':'hidden'}>${sec('',cell({t:'Отменить несохранённые изменения',cls:'link',act:'data-act="admUndo"'}))}</div>`,main:admMain()}};
 
+// Демо-экран «Как это видит компания»: уведомление бота в Telegram + список заявок (чужие — из inbox.sample, выдуманы; ваша — из демо). Ничего не сохраняется
+function sendReq(key,me,h,p){const X=D[key].inbox||{};U.box={key,me:{...me,when:'только что',status:'Новая'}};finish(h,p,X.link?{next:{t:X.link,go:'inbox'}}:{})}
+scr.inbox=()=>{const{key,me}=U.box,X=D[key].inbox||{},all=[{...me,mine:1},...(X.sample||[])];return{title:X.title||'Заявки',sub:X.sub||'',html:`
+ ${sec('Уведомление в Telegram',`<div class="tgmsg"><span class="from">${esc(X.bot||'Бот компании')}</span><b>🔔 ${esc(me.kind)}</b>
+${esc(me.person)}, ${esc(me.phone)}
+${me.lines.filter(Boolean).map(esc).join('\n')}
+<b>${esc(me.sum)}</b></div><div class="tgkb">${me.status==='Новая'?'<button data-act="take">Взять в работу</button>':'<span>✓ Вы взяли заявку в работу</span>'}</div>`,'Приходит менеджеру сразу после отправки — переписывать из чата ничего не нужно.')}
+ ${sec('Все заявки',all.map(o=>cell({t:esc(o.person)+(o.mine?' (вы)':'')+` <span class="when">${esc(o.when)}</span>`,s:esc(o.text)+' · '+esc(o.mine?o.sum.replace(/^[^:]+:\s*/,''):o.sum),val:`<span class="st ${o.status==='Новая'?'new':''}">${esc(o.status)}</span>`})).join(''))}
+ <div class="note">Пример: другие заявки выдуманы, ваша — из демо. В рабочей версии заявки собираются в список, у каждой — статус.</div>`,
+ main:{text:D.done.button,fn:home}}};
+
 scr.done=()=>({title:'Готово',sub:'',html:`<div class="done"><div class="ok">✓</div><h2>${esc(U.done.h)}</h2><p>${esc(U.done.p)}</p></div>
  ${U.done.next?sec('',cell({t:esc(U.done.next.t),chev:1,go:U.done.next.go})):''}
  ${sec('',cell({t:esc(D.done.chatLink),cls:'link',act:'data-act="chat"'}))}`,main:{text:D.done.button,fn:home}});
@@ -572,6 +595,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
+ if(d.act==='take'){U.box.me.status='В работе';if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
  if(d.rm){const u=U.rep;if(d.rm==='all'&&u.mode!=='all'&&!Object.values(u.sel).some(Boolean))u.sel[u.work]=true;u.mode=d.rm;return render()}
  if(d.rw){const u=U.rep;if(u.mode==='all')u.sel[d.rw]=!u.sel[d.rw];else u.work=d.rw;return render()}
  if(d.st){const s=rIt(d.w),m={lamps:[1,R.lampMax],chand:[0,R.chandelierMax],corn:[1,50],led:[1,100]}[d.st];s[d.st]=Math.max(m[0],Math.min(m[1],s[d.st]+ +d.d));return render()}
