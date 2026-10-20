@@ -173,6 +173,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .mv{display:flex;gap:4px;flex:none}
 .mv button{width:32px;height:32px;border-radius:9px;background:var(--cell2);font-size:15px}
 .mv button:disabled{opacity:.3}
+.arow .del{width:32px;height:32px;border-radius:9px;background:var(--cell2);color:#FF6B6B;font-size:18px;flex:none}
 .amsg{margin:14px 16px 0;padding:12px 14px;border-radius:14px;font-size:14px}
 .amsg.ok{background:#22C55E26;color:#4ADE80}.amsg.err{background:#FF6B6B26;color:var(--danger)}
 @media (prefers-reduced-motion:no-preference){.scr{animation:sl .22s ease-out}@keyframes sl{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
@@ -444,8 +445,21 @@ const fN=(p,label,u='₽')=>`<div class="cell"><span class="tx"><b>${label}</b><
 const fB=p=>`<input class="sw" type="checkbox" data-t="bool" data-p="${p}" ${getP(U.adm.draft,p)?'checked':''}>`;
 const mv=(p,i,n)=>`<span class="mv"><button data-mv="${p}" data-i="${i}" data-d="-1" ${i?'':'disabled'} aria-label="Выше">↑</button><button data-mv="${p}" data-i="${i}" data-d="1" ${i<n-1?'':'disabled'} aria-label="Ниже">↓</button></span>`;
 // строка списка: значок, название (редактируемое), число, переключатель, стрелки
-const row=(p,i,o)=>`<div class="cell arow"><span class="ai">${ic(getP(U.adm.draft,p+'.'+i+'.icon'))}</span><input class="edn" data-p="${p}.${i}.${o.name}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.name))}" aria-label="Название">${o.num?`<input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}.${i}.${o.num}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.num))}" aria-label="Цена">`:''}${o.bool?fB(p+'.'+i+'.'+o.bool):''}${o.move?mv(p,i,o.n):''}</div>`;
-const rows=(p,o)=>getP(U.adm.draft,p).map((_,i,a)=>row(p,i,{...o,n:a.length})).join('');
+const row=(p,i,o)=>`<div class="cell arow"><span class="ai">${ic(getP(U.adm.draft,p+'.'+i+'.icon'))}</span><input class="edn" data-p="${p}.${i}.${o.name}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.name))}" aria-label="Название">${o.num?`<input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}.${i}.${o.num}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.num))}" aria-label="Цена">`:''}${o.bool?fB(p+'.'+i+'.'+o.bool):''}${o.move?mv(p,i,o.n):''}${o.del!==0&&NEW[tplKey(p)]?`<button class="del" data-del="${p}" data-i="${i}" aria-label="Удалить">×</button>`:''}</div>`;
+const rows=(p,o)=>getP(U.adm.draft,p).map((_,i,a)=>row(p,i,{...o,n:a.length})).join('')+(NEW[tplKey(p)]?cell({t:'+ '+NEW[tplKey(p)][0],cls:'link',act:`data-addrow="${p}"`}):'');
+// Шаблоны новых строк для «+ Добавить»: [подпись кнопки, () => новый объект]. Ключ — путь списка (номер группы → *)
+const uid=pr=>pr+Date.now().toString(36);
+const tplKey=p=>p.replace(/\.\d+\./g,'.*.');
+const NEW={
+ 'repair.works':['Добавить вид работ',()=>({id:uid('w'),icon:'hammer_and_wrench',name:'Новая работа',price:500})],
+ 'lunch.menu':['Добавить блюдо',()=>{const m=U.adm.draft.lunch.menu;return{id:uid('m'),category:(m[m.length-1]||{}).category||'Горячее',icon:'🍽️',name:'Новое блюдо',price:200,available:true}}],
+ 'lunch.offices':['Добавить офис',()=>({code:uid('of'),name:'Новый офис',address:''})],
+ 'rent.flats':['Добавить квартиру',()=>({id:uid('f'),icon:'bed',name:'Новая квартира',address:'Адрес',maxGuests:2,extraBeds:1,price:3000,show:true,color1:'#1E3A4A',color2:'#3F8BB0',gallery:[]})],
+ 'rent.services':['Добавить услугу',()=>({id:uid('s'),name:'Новая услуга',price:0})],
+ 'build.houses':['Добавить постройку',()=>({id:uid('h'),icon:'house',name:'Новая постройка',info:'',widths:'2, 3',lengths:'4, 6',pricePerM2:20000,months:1,foundation:'piles',show:true,color1:'#2A2340',color2:'#7A68C4',gallery:[]})],
+ 'build.options.*.items':['Добавить вариант',()=>({id:uid('o'),name:'Новый вариант',text:'',pricePerM2:0})],
+ 'build.extras':['Добавить работу',()=>({id:uid('e'),name:'Новая работа',text:'',price:0})],
+};
 scr.admin=()=>{
  if(!IS_OWNER)return{title:'Админка',sub:'',html:'<div class="note" style="margin-top:60px">Админка доступна только владельцу витрины.</div>',main:{text:D.done.button,fn:home}};
  const a=U.adm;if(!a.draft)a.draft=clone(D);const t=a.tab;let h='';
@@ -455,14 +469,17 @@ scr.admin=()=>{
  if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
    sec('Виды работ, ₽ за м²',rows('repair.works',{name:'name',num:'price',move:1}))+
    sec('Дополнительно',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
- if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.offices.0.name','Офис в демо: название')+fT('lunch.offices.0.address','Офис в демо: адрес')+fT('lunch.note','Подпись под меню'))+
-   sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось».');
+ if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.note','Подпись под меню'))+
+   sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось». У нового блюда пока нет картинки.')+
+   sec('Офисы-заказчики',rows('lunch.offices',{name:'name'})+getP(a.draft,'lunch.offices').map((x,i)=>fT(`lunch.offices.${i}.address`,esc(x.name)+': адрес')).join(''),'Первый офис — тот, от имени которого заказывают в демо.');
  if(t==='rent')h=sec('Экран',fT('rent.title','Название')+fT('rent.subtitle','Подзаголовок')+fT('rent.note','Подпись под списком'))+
    sec('Квартиры: ₽ за ночь и показ',rows('rent.flats',{name:'name',num:'price',bool:'show'}),'Выключенная квартира пропадает из списка.')+
+   sec('Адреса',getP(a.draft,'rent.flats').map((x,i)=>fT(`rent.flats.${i}.address`,esc(x.name)+': адрес')).join(''))+
    sec('Места',getP(a.draft,'rent.flats').map((x,i)=>fN(`rent.flats.${i}.maxGuests`,esc(x.name)+': основных мест','')+fN(`rent.flats.${i}.extraBeds`,'доп. мест','')).join('')+fN('rent.extraBedPrice','Доп. место, за ночь'))+
    sec('Доп. услуги, ₽ за проживание',rows('rent.services',{name:'name',num:'price'}));
  if(t==='build')h=sec('Экран',fT('build.title','Название')+fT('build.subtitle','Подзаголовок'))+
    sec('Что строим: базовая цена ₽ за м² и показ',rows('build.houses',{name:'name',num:'pricePerM2',bool:'show'}))+
+   sec('Подписи и сроки',getP(a.draft,'build.houses').map((x,i)=>fT(`build.houses.${i}.info`,esc(x.name)+': подпись')+fN(`build.houses.${i}.months`,'срок, месяцев','')).join(''))+
    sec('Размеры для ползунков, м (через запятую)',getP(a.draft,'build.houses').map((x,i)=>fT(`build.houses.${i}.widths`,esc(x.name)+': ширина')+fT(`build.houses.${i}.lengths`,esc(x.name)+': длина')).join(''))+
    (getP(a.draft,'build.options')||[]).map((g,i)=>sec(esc(g.title)+', ₽ за м²',rows(`build.options.${i}.items`,{name:'name',num:'pricePerM2'}))).join('')+
    sec('Терраса',fT('build.terraceDepths','Глубина, м через запятую')+fN('build.terracePricePerM2','Цена за м²'))+
@@ -503,8 +520,11 @@ function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-off]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-addrow],[data-del],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
+ if(d.addrow){const t=NEW[tplKey(d.addrow)];if(t){getP(U.adm.draft,d.addrow).push(t[1]());admDirty();render()}return}
+ if(d.del){const arr=getP(U.adm.draft,d.del),i=+d.i,nm=arr[i]&&(arr[i].name||arr[i].title)||'';if(arr.length<2){alert('Последний пункт удалить нельзя — список не может быть пустым.');return}
+  const go_=ok=>{if(!ok)return;arr.splice(i,1);admDirty();render()};if(TG&&TG.showConfirm)TG.showConfirm(`Удалить «${nm}»?`,go_);else go_(confirm(`Удалить «${nm}»?`));return}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.off){U.off=+d.off;return go('office')}
