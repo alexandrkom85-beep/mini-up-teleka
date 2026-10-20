@@ -205,10 +205,13 @@ if(TG){document.documentElement.classList.add('in-tg');TG.ready();TG.expand();
 function openChat(){const u='https://t.me/'+D.contact;if(TG)TG.openTelegramLink(u);else window.open(u,'_blank')}
 const rub=n=>Math.round(+n||0).toLocaleString('ru-RU')+' ₽';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let R=D.repair,L=D.lunch,A=D.rent,B=normBuild(D.build);
+// Ремонт: новые поля (натяжной потолок, режимы) могут отсутствовать в живом data.json — подставляем значения по умолчанию
+function normRepair(r){const df={lampsStart:6,lampMax:20,chandelierPrice:600,chandelierMax:10,cornicePrice:500,corniceStart:3,ledPrice:1200,ledStart:5,modeOne:'Один вид работ',modeAll:'Комплексный ремонт'};
+ for(const k in df)if(r[k]==null||r[k]==='')r[k]=df[k];return r}
+let R=normRepair(D.repair),L=D.lunch,A=D.rent,B=normBuild(D.build);
 const clone=o=>JSON.parse(JSON.stringify(o));
 let IS_OWNER=false;
-const U={bld:{house:null,ex:{},opt:{},terr:0,w:0,l:0},scr:'home',stack:[],rep:{work:R.works[0].id,area:R.areaStart,lamps:R.lampsStart,demont:false,rough:false},adm:{tab:'home',bh:0,draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',sv:{},
+const U={bld:{house:null,ex:{},opt:{},terr:0,w:0,l:0},scr:'home',stack:[],rep:{mode:'one',work:R.works[0].id,sel:{},it:{},area:R.areaStart},adm:{tab:'home',bh:0,draft:null,dirty:false,saving:false,msg:''},cart:{},cat:'Все',sv:{},
   flat:null,start:null,end:null,guests:2,done:null,err:''};
 
 const $=id=>document.getElementById(id);
@@ -241,21 +244,38 @@ scr.home=()=>{const H=D.home;return{title:D.appTitle,sub:D.appSubtitle,html:`
 
 const clampA=a=>Math.min(R.areaMax,Math.max(R.areaMin,a));
 const curWork=()=>R.works.find(x=>x.id===U.rep.work)||R.works[0];
-function repTotal(){const u=U.rep,w=curWork();let t=w.price*u.area;if(w.lamps)t+=u.lamps*R.lampPrice;if(u.demont)t+=R.demolitionPrice*u.area;if(u.rough)t+=R.materialsPrice*u.area;return{t,w}}
-scr.repair=()=>{const u=U.rep,{t,w}=repTotal();return{title:R.title,sub:R.subtitle,html:`
+// У каждого вида работ свой расчёт (площадь, допы). «Комплексный ремонт» — несколько работ сразу, цена — сумма.
+function rIt(id){return U.rep.it[id]||(U.rep.it[id]={area:U.rep.area,L:'',W:'',demont:false,rough:false,lampsOn:true,lamps:R.lampsStart,chand:0,cornOn:false,corn:R.corniceStart,ledOn:false,led:R.ledStart})}
+const repWorks=()=>U.rep.mode==='all'?R.works.filter(w=>U.rep.sel[w.id]):[curWork()];
+function workSum(w){const s=rIt(w.id);let t=(w.price+(s.demont?R.demolitionPrice:0)+(s.rough?R.materialsPrice:0))*s.area;
+ if(w.lamps)t+=(s.lampsOn?s.lamps*R.lampPrice:0)+s.chand*R.chandelierPrice+(s.cornOn?s.corn*R.cornicePrice:0)+(s.ledOn?s.led*R.ledPrice:0);return t}
+function repTotal(){const ws=repWorks();return{t:ws.reduce((a,w)=>a+workSum(w),0),ws}}
+function repDet(w){const s=rIt(w.id),d=[];if(w.lamps){if(s.lampsOn)d.push(s.lamps+' '+pl(s.lamps,'светильник','светильника','светильников'));if(s.chand)d.push('под люстру: '+s.chand);if(s.cornOn)d.push('карниз '+s.corn+' м');if(s.ledOn)d.push('лента '+s.led+' м')}
+ if(s.demont)d.push('демонтаж');if(s.rough)d.push('материалы');return d.join(', ')}
+const repMain=()=>{const{t,ws}=repTotal();return ws.length?{text:R.button+' · от '+rub(t),fn:()=>go('repairForm')}:{text:'Отметьте виды работ',disabled:true}};
+const rStp=(id,k,v,t,s)=>`<div class="cell"><span class="tx"><b>${t}</b>${s?`<span>${s}</span>`:''}</span><span class="stp"><button data-st="${k}" data-w="${id}" data-d="-1" aria-label="Меньше">−</button><span>${v}</span><button data-st="${k}" data-w="${id}" data-d="1" aria-label="Больше">+</button></span></div>`;
+const rSw=(id,k,on,t,s)=>`<label class="cell"><span class="tx"><b>${t}</b><span>${s}</span></span><input class="sw" type="checkbox" data-sw="${k}" data-w="${id}" ${on?'checked':''}></label>`;
+function repArea(w,label){const s=rIt(w.id),id=esc(w.id);return`<div class="cell"><span class="tx"><b>${label}</b></span><span class="num"><input class="numin" data-w="${id}" data-k="n" type="text" inputmode="decimal" value="${fmtA(s.area)}" aria-label="Площадь, м²"><span>м²</span></span></div>
+ <div class="cell" style="padding-top:0"><input data-w="${id}" data-k="r" type="range" min="${R.areaMin}" max="${R.areaMax}" value="${clampA(s.area)}" aria-label="Площадь, ползунок"></div>
+ <div class="cell dims"><span class="tx"><b>По размерам</b><span>длина × ширина, м</span></span><input class="numin" data-w="${id}" data-k="L" type="text" inputmode="decimal" placeholder="0" value="${esc(s.L)}" aria-label="Длина, м"><span class="x">×</span><input class="numin" data-w="${id}" data-k="W" type="text" inputmode="decimal" placeholder="0" value="${esc(s.W)}" aria-label="Ширина, м"></div>`}
+function repExtras(w){const s=rIt(w.id),id=esc(w.id);return(w.lamps?
+  rSw(id,'lampsOn',s.lampsOn,'Точечные светильники',rub(R.lampPrice)+' за шт.')+(s.lampsOn?rStp(id,'lamps',s.lamps,'Количество светильников','до '+R.lampMax+' шт.'):'')+
+  rStp(id,'chand',s.chand,'Закладные под люстру',rub(R.chandelierPrice)+' за шт.')+
+  rSw(id,'cornOn',s.cornOn,'Закладные под карниз',s.cornOn?'требуется · '+rub(R.cornicePrice)+' за м':'не требуется')+(s.cornOn?rStp(id,'corn',s.corn,'Длина карниза, м',''):'')+
+  rSw(id,'ledOn',s.ledOn,'Светодиодная лента',rub(R.ledPrice)+' за м')+(s.ledOn?rStp(id,'led',s.led,'Длина ленты, м',''):''):'')+
+  rSw(id,'demont',s.demont,'Демонтаж старого',rub(R.demolitionPrice)+' за м²')+rSw(id,'rough',s.rough,'Материалы от нас',rub(R.materialsPrice)+' за м²')}
+scr.repair=()=>{const u=U.rep,all=u.mode==='all',{t,ws}=repTotal();return{title:R.title,sub:R.subtitle,html:`
+ <div class="segc">${[['one',R.modeOne],['all',R.modeAll]].map(([k,v])=>`<button data-rm="${k}" aria-pressed="${u.mode===k}">${esc(v)}</button>`).join('')}</div>
  <div class="sum"><span>Предварительная цена</span><b id="sumV">от ${rub(t)}</b><span class="em" aria-hidden="true">${ic(R.priceIcon||'house')}</span></div>
- <div class="sec"><div class="sec-h">Вид работ</div><div class="opts">${R.works.map(x=>`<button class="opt" data-rw="${esc(x.id)}" aria-pressed="${w.id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${ic(x.icon)}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.price)}/м²</span></button>`).join('')}</div></div>
- ${sec('Площадь',`<div class="cell"><span class="tx"><b>Площадь помещения</b></span><span class="num"><input class="numin" id="areaN" type="text" inputmode="decimal" value="${fmtA(u.area)}" aria-label="Площадь, м²"><span>м²</span></span></div>
-   <div class="cell" style="padding-top:0"><input id="area" type="range" min="${R.areaMin}" max="${R.areaMax}" value="${clampA(u.area)}" aria-label="Площадь, ползунок"></div>
-   <div class="cell dims"><span class="tx"><b>По размерам</b><span>длина × ширина, м</span></span><input class="numin" id="dimL" type="text" inputmode="decimal" placeholder="0" value="${esc(u.L||'')}" aria-label="Длина, м"><span class="x">×</span><input class="numin" id="dimW" type="text" inputmode="decimal" placeholder="0" value="${esc(u.W||'')}" aria-label="Ширина, м"></div>`)}
- ${sec('Дополнительно',
-   (w.lamps?`<div class="cell"><span class="tx"><b>Точечные светильники</b><span>${rub(R.lampPrice)} за шт.</span></span><span class="stp"><button data-lamp="-1" aria-label="Меньше">−</button><span>${u.lamps}</span><button data-lamp="1" aria-label="Больше">+</button></span></div>`:'')+
-   `<label class="cell"><span class="tx"><b>Демонтаж старого</b><span>${rub(R.demolitionPrice)} за м²</span></span><input class="sw" type="checkbox" id="demont" ${u.demont?'checked':''}></label>
-    <label class="cell"><span class="tx"><b>Материалы от нас</b><span>${rub(R.materialsPrice)} за м²</span></span><input class="sw" type="checkbox" id="rough" ${u.rough?'checked':''}></label>`,
-   esc(R.note))}`,
- main:{text:R.button+' · от '+rub(t),fn:()=>go('repairForm')}}};
-scr.repairForm=()=>{const{t,w}=repTotal();return{title:R.formTitle,sub:R.title,html:`
- ${sec('Ваш расчёт',cell({t:esc(w.name)+', '+fmtA(U.rep.area)+' м²',val:'от '+rub(t)}))}
+ <div class="sec"><div class="sec-h">${all?'Виды работ — отметьте нужные':'Вид работ'}</div><div class="opts">${R.works.map(x=>`<button class="opt" data-rw="${esc(x.id)}" aria-pressed="${all?!!u.sel[x.id]:ws[0].id===x.id}"><span class="ck"></span><span class="em" aria-hidden="true">${ic(x.icon)}</span><b>${esc(x.name)}</b><span class="pr">${rub(x.price)}/м²</span></button>`).join('')}</div></div>
+ ${!all?sec('Площадь',repArea(ws[0],'Площадь помещения'))+sec('Дополнительно',repExtras(ws[0]),esc(R.note))
+  :!ws.length?'<div class="note">Отметьте работы — для каждой появится свой расчёт площади.</div>'
+  :ws.map(w=>sec(`${esc(w.name)} · <span data-sub="${esc(w.id)}">${rub(workSum(w))}</span>`,repArea(w,'Площадь')+repExtras(w))).join('')+
+   sec('Итого',ws.map(w=>`<div class="cell"><span class="tx"><b>${esc(w.name)}</b><span data-ar="${esc(w.id)}">${fmtA(rIt(w.id).area)} м²</span></span><span class="val" data-sub="${esc(w.id)}">${rub(workSum(w))}</span></div>`).join('')+
+    `<div class="cell"><span class="tx"><b>Всего</b></span><b id="totV">от ${rub(t)}</b></div>`,esc(R.note))}`,
+ main:repMain()}};
+scr.repairForm=()=>{const{t,ws}=repTotal();return{title:R.formTitle,sub:R.title,html:`
+ ${sec('Ваш расчёт',ws.map(w=>cell({t:esc(w.name)+', '+fmtA(rIt(w.id).area)+' м²',s:esc(repDet(w)),val:(ws.length>1?'':'от ')+rub(workSum(w))})).join('')+(ws.length>1?cell({t:'Итого',val:'от '+rub(t)}):''))}
  ${sec('Контакты',`<div class="inpcell"><input class="inp" id="rn" placeholder="Имя" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="rp" inputmode="tel" placeholder="Телефон: +7 (___) ___-__-__" maxlength="18" autocomplete="off"></div>
    <div class="inpcell"><input class="inp" id="ra" placeholder="Адрес или район" autocomplete="off"></div>`,esc(D.formNote))}
@@ -445,7 +465,7 @@ const admMain=()=>U.adm.saving?{text:'Сохраняю…',disabled:true}:{text:
 function admSave(){const a=U.adm;a.saving=true;setMain(admMain());
  fetch(ADMIN_API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'save',initData:TG?TG.initData:'',data:a.draft})})
   .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok||!j.ok)throw new Error(j.error||('ошибка '+r.status));
-    D=window.SHOWCASE=clone(a.draft);R=D.repair;L=D.lunch;A=D.rent;B=normBuild(D.build);a.dirty=false;a.msg='ok';
+    D=window.SHOWCASE=clone(a.draft);R=normRepair(D.repair);L=D.lunch;A=D.rent;B=normBuild(D.build);a.dirty=false;a.msg='ok';
     if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('success')}))
   .catch(e=>{a.msg='Не сохранилось: '+e.message;if(TG&&TG.HapticFeedback)TG.HapticFeedback.notificationOccurred('error')})
   .finally(()=>{a.saving=false;render()})}
@@ -479,7 +499,9 @@ scr.admin=()=>{
    sec('Что получает бизнес',rows('home.benefits',{name:'title',move:1}));
  if(t==='repair')h=sec('Экран',fT('repair.title','Название')+fT('repair.subtitle','Подзаголовок')+fT('repair.note','Подпись под ценой'))+
    sec('Виды работ, ₽ за м²',rows('repair.works',{name:'name',num:'price',move:1}))+
-   sec('Дополнительно',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
+   sec('Натяжной потолок',fN('repair.lampPrice','Светильник, за шт.')+fN('repair.lampsStart','Светильников сразу','шт')+fN('repair.lampMax','Светильников максимум','шт')+
+     fN('repair.chandelierPrice','Закладная под люстру, за шт.')+fN('repair.cornicePrice','Закладная под карниз, за м')+fN('repair.ledPrice','Светодиодная лента, за м'))+
+   sec('Дополнительно',fN('repair.demolitionPrice','Демонтаж, за м²')+fN('repair.materialsPrice','Материалы, за м²'));
  if(t==='lunch')h=sec('Экран',fT('lunch.title','Название')+fT('lunch.subtitle','Подзаголовок')+fT('lunch.deliveryWindow','Время доставки')+fT('lunch.orderDeadline','Приём заказов до (накануне)')+fT('lunch.note','Подпись под меню'))+
    sec('Меню: цена ₽ и «есть в меню»',rows('lunch.menu',{name:'name',num:'price',bool:'available'}),'Выключите блюдо — в меню появится «Закончилось». У нового блюда пока нет картинки.')+
    sec('Офисы-заказчики',rows('lunch.offices',{name:'name'})+getP(a.draft,'lunch.offices').map((x,i)=>fT(`lunch.offices.${i}.address`,esc(x.name)+': адрес')).join(''),'Первый офис — тот, от имени которого заказывают в демо.');
@@ -529,11 +551,12 @@ function render(){const v=scr[U.scr]();const isHome=U.scr==='home';
 function setMain(m){curMain=m;const b=$('mbb');b.textContent=m.text;b.disabled=!!m.disabled;
  if(TG){const M=TG.MainButton;M.setParams(m.disabled?{color:'#2A2E38',text_color:'#7C8190'}:{color:'#2F6BFF',text_color:'#FFFFFF'});M.setText(m.text);m.disabled?M.disable():M.enable();M.show()}}
 function liveMain(text){$('mbb').textContent=text;if(TG)TG.MainButton.setText(text)}
-function repLive(){const t=repTotal().t;liveMain(R.button+' · от '+rub(t));if($('sumV'))$('sumV').textContent='от '+rub(t)}
+function repLive(){const{t,ws}=repTotal(),T=(s,v)=>document.querySelectorAll(s).forEach(e=>e.textContent=v);curMain=repMain();liveMain(curMain.text);T('#sumV,#totV','от '+rub(t));
+ ws.forEach(w=>{const k=CSS.escape(w.id);T(`[data-sub="${k}"]`,rub(workSum(w)));T(`[data-ar="${k}"]`,fmtA(rIt(w.id).area)+' м²')})}
 $('mbb').addEventListener('click',()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});
 if(TG){TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMain.fn()});TG.BackButton.onClick(back)}
 
-document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-lamp],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-addrow],[data-del],[data-bh],[data-off]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-rm],[data-st],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-addrow],[data-del],[data-bh],[data-off]');if(!b)return;const d=b.dataset;
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.bh){U.adm.bh=+d.bh;return render()}
  if(d.addrow){const t=NEW[tplKey(d.addrow)];if(t){getP(U.adm.draft,d.addrow).push(t[1]());admDirty();render()}return}
@@ -549,8 +572,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-
  if(d.go)return go(d.go);
  if(d.act==='back')return back();
  if(d.act==='chat')return openChat();
- if(d.rw){U.rep.work=d.rw;return render()}
- if(d.lamp){U.rep.lamps=Math.max(0,Math.min(40,U.rep.lamps+ +d.lamp));return render()}
+ if(d.rm){const u=U.rep;if(d.rm==='all'&&u.mode!=='all'&&!Object.values(u.sel).some(Boolean))u.sel[u.work]=true;u.mode=d.rm;return render()}
+ if(d.rw){const u=U.rep;if(u.mode==='all')u.sel[d.rw]=!u.sel[d.rw];else u.work=d.rw;return render()}
+ if(d.st){const s=rIt(d.w),m={lamps:[1,R.lampMax],chand:[0,R.chandelierMax],corn:[1,50],led:[1,100]}[d.st];s[d.st]=Math.max(m[0],Math.min(m[1],s[d.st]+ +d.d));return render()}
  if(d.cat){U.cat=d.cat;return render()}
  if(d.add){const q=(U.cart[d.add]||0)+ +d.d;if(q<=0)delete U.cart[d.add];else U.cart[d.add]=q;if(TG&&TG.HapticFeedback)TG.HapticFeedback.impactOccurred('light');return render()}
  if(d.flat){U.flat=d.flat;U.start=U.end=null;U.sv={};U.guests=Math.min(2,curFlat().maxGuests);return go('flat')}
@@ -562,14 +586,14 @@ document.addEventListener('input',e=>{const t=e.target;
  if(t.dataset.p&&U.adm.draft){const ty=t.dataset.t;setP(U.adm.draft,t.dataset.p,ty==='num'?Math.max(0,+String(t.value).replace(',','.')||0):ty==='bool'?t.checked:t.value);admDirty();return}
  if(t.id==='bW'||t.id==='bL'||t.id==='tD'){const h=house(),k={bW:['w',h.widths],bL:['l',h.lengths],tD:['td',hTerr(h)?.depths]}[t.id];U.bld[k[0]]=nums(k[1])[+t.value];return bldLive()}
  // площадь: ползунок, ввод числом или длина × ширина — всё синхронно
- if(t.id==='area'||t.id==='areaN'||t.id==='dimL'||t.id==='dimW'){const u=U.rep,num=x=>parseFloat(String(x).replace(',','.'));
-  if(t.id==='area'){u.area=+t.value;u.L=u.W='';$('areaN').value=fmtA(u.area);$('dimL').value=$('dimW').value=''}
-  else if(t.id==='areaN'){const v=num(t.value);if(!(v>0))return;u.area=Math.min(1000,Math.round(v*10)/10);u.L=u.W='';$('area').value=clampA(u.area);$('dimL').value=$('dimW').value=''}
-  else{u.L=$('dimL').value;u.W=$('dimW').value;const a=num(u.L)*num(u.W);if(!(a>0))return;u.area=Math.min(1000,Math.round(a*10)/10);$('areaN').value=fmtA(u.area);$('area').value=clampA(u.area)}
-  repLive();curMain=scr.repair().main}
+ if(t.dataset.w&&t.dataset.k){const u=rIt(t.dataset.w),k=t.dataset.k,num=x=>parseFloat(String(x).replace(',','.')),q=x=>document.querySelector(`[data-w="${CSS.escape(t.dataset.w)}"][data-k="${x}"]`);
+  if(k==='r'){u.area=+t.value;u.L=u.W='';q('n').value=fmtA(u.area);q('L').value=q('W').value=''}
+  else if(k==='n'){const v=num(t.value);if(!(v>0))return;u.area=Math.min(1000,Math.round(v*10)/10);u.L=u.W='';q('r').value=clampA(u.area);q('L').value=q('W').value=''}
+  else{u.L=q('L').value;u.W=q('W').value;const a=num(u.L)*num(u.W);if(!(a>0))return;u.area=Math.min(1000,Math.round(a*10)/10);q('n').value=fmtA(u.area);q('r').value=clampA(u.area)}
+  U.rep.area=u.area;repLive()}
 });
 document.addEventListener('change',e=>{const t=e.target;
- if(t.id==='demont'||t.id==='rough'){U.rep[t.id]=t.checked;repLive()}
+ if(t.dataset.sw&&t.dataset.w){rIt(t.dataset.w)[t.dataset.sw]=t.checked;return render()}
  if(t.dataset.sv){U.sv[t.dataset.sv]=t.checked;return render()}
  if(t.dataset.ex){U.bld.ex[t.dataset.ex]=t.checked;const s=B.button+' · от '+rub(bldTotal().t);liveMain(s);$('bsumV').textContent='от '+rub(bldTotal().t);curMain=scr.house().main}
 });
