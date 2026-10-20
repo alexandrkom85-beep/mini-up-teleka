@@ -179,6 +179,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .mv button{width:32px;height:32px;border-radius:9px;background:var(--cell2);font-size:15px}
 .mv button:disabled{opacity:.3}
 .arow .del{width:32px;height:32px;border-radius:9px;background:var(--cell2);color:#FF6B6B;font-size:18px;flex:none}
+.arow .del.ask{width:auto;padding:0 10px;background:#FF6B6B;color:#fff;font-size:14px;font-weight:600}
 .amsg{margin:14px 16px 0;padding:12px 14px;border-radius:14px;font-size:14px}
 .amsg.ok{background:#22C55E26;color:#4ADE80}.amsg.err{background:#FF6B6B26;color:var(--danger)}
 @media (prefers-reduced-motion:no-preference){.scr{animation:sl .22s ease-out}@keyframes sl{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
@@ -501,7 +502,7 @@ const fN=(p,label,u='₽')=>`<div class="cell"><span class="tx"><b>${label}</b><
 const fB=p=>`<input class="sw" type="checkbox" data-t="bool" data-p="${p}" ${getP(U.adm.draft,p)?'checked':''}>`;
 const mv=(p,i,n)=>`<span class="mv"><button data-mv="${p}" data-i="${i}" data-d="-1" ${i?'':'disabled'} aria-label="Выше">↑</button><button data-mv="${p}" data-i="${i}" data-d="1" ${i<n-1?'':'disabled'} aria-label="Ниже">↓</button></span>`;
 // строка списка: значок, название (редактируемое), число, переключатель, стрелки
-const row=(p,i,o)=>`<div class="cell arow"><span class="ai">${ic(getP(U.adm.draft,p+'.'+i+'.icon'))}</span><input class="edn" data-p="${p}.${i}.${o.name}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.name))}" aria-label="Название">${o.num?`<input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}.${i}.${o.num}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.num))}" aria-label="Цена">`:''}${o.bool?fB(p+'.'+i+'.'+o.bool):''}${o.move?mv(p,i,o.n):''}${o.del!==0&&NEW[tplKey(p)]?`<button class="del" data-del="${p}" data-i="${i}" aria-label="Удалить">×</button>`:''}</div>`;
+const row=(p,i,o)=>`<div class="cell arow"><span class="ai">${ic(getP(U.adm.draft,p+'.'+i+'.icon'))}</span><input class="edn" data-p="${p}.${i}.${o.name}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.name))}" aria-label="Название">${o.num?`<input class="ed" type="text" inputmode="decimal" data-t="num" data-p="${p}.${i}.${o.num}" value="${esc(getP(U.adm.draft,p+'.'+i+'.'+o.num))}" aria-label="Цена">`:''}${o.bool?fB(p+'.'+i+'.'+o.bool):''}${o.move?mv(p,i,o.n):''}${o.del!==0&&NEW[tplKey(p)]&&o.n>1?(U.adm.delAsk===p+'.'+i?`<button class="del ask" data-del="${p}" data-i="${i}">Удалить?</button>`:`<button class="del" data-del="${p}" data-i="${i}" aria-label="Удалить">×</button>`):''}</div>`;
 const rows=(p,o)=>getP(U.adm.draft,p).map((_,i,a)=>row(p,i,{...o,n:a.length})).join('')+(NEW[tplKey(p)]?cell({t:'+ '+NEW[tplKey(p)][0],cls:'link',act:`data-addrow="${p}"`}):'');
 // Шаблоны новых строк для «+ Добавить»: [подпись кнопки, () => новый объект]. Ключ — путь списка (номер группы → *)
 const uid=pr=>pr+Date.now().toString(36);
@@ -597,11 +598,14 @@ if(TG)TG.MainButton.onClick(()=>{if(curMain&&curMain.fn&&!curMain.disabled)curMa
 if(BB())BB().onClick(back);
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-act],[data-rw],[data-rm],[data-st],[data-cat],[data-add],[data-flat],[data-di],[data-g],[data-house],[data-og],[data-gal],[data-tr],[data-at],[data-mv],[data-addrow],[data-del],[data-bh],[data-off]');if(!b)return;const d=b.dataset;
+ if(U.adm.delAsk&&!d.del){U.adm.delAsk='';render()}   // любое другое нажатие отменяет «Удалить?»
  if(d.at){U.adm.tab=d.at;U.adm.msg='';render();return window.scrollTo(0,0)}
  if(d.bh){U.adm.bh=+d.bh;return render()}
  if(d.addrow){const t=NEW[tplKey(d.addrow)];if(t){getP(U.adm.draft,d.addrow).push(t[1]());admDirty();render()}return}
- if(d.del){const arr=getP(U.adm.draft,d.del),i=+d.i,nm=arr[i]&&(arr[i].name||arr[i].title)||'';if(arr.length<2){alert('Последний пункт удалить нельзя — список не может быть пустым.');return}
-  const go_=ok=>{if(!ok)return;arr.splice(i,1);admDirty();render()};if(TG&&TG.showConfirm)TG.showConfirm(`Удалить «${nm}»?`,go_);else go_(confirm(`Удалить «${nm}»?`));return}
+ // удаление в два нажатия: «×» → «Удалить?» → удалить (окна confirm в MAX нет). Последний пункт списка удалить нельзя — «×» у него не показывается
+ if(d.del){const arr=getP(U.adm.draft,d.del),i=+d.i,k=d.del+'.'+i;if(arr.length<2)return;
+  if(U.adm.delAsk!==k){U.adm.delAsk=k;hap('impactOccurred','light');return render()}
+  U.adm.delAsk='';arr.splice(i,1);admDirty();return render()}
  if(d.mv){const a=getP(U.adm.draft,d.mv),i=+d.i,j=i+ +d.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];admDirty();return render()}
  if(d.act==='admUndo'){U.adm.draft=null;U.adm.dirty=false;U.adm.msg='';return render()}
  if(d.off){U.off=+d.off;return go('office')}
